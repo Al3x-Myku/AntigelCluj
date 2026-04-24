@@ -64,7 +64,16 @@ The server starts at **http://localhost:8000**. On first launch, the database is
 - 10 demo accounts (2 mapped to victim mini-PC IPs)
 - 530 login events (500 normal + 30 anomalous) for ML training
 
-### 4. (Optional) Start Docker Services
+### 4. (Optional) Run Live Demo Traffic
+
+If you don't have the mini PCs or real users connected yet, you can use the simulator to pump live traffic into the Blue Team monitor:
+
+```bash
+python3 demo_traffic.py
+```
+This generates a realistic stream of normal and anomalous login events every few seconds.
+
+### 5. (Optional) Start Docker Services
 
 ```bash
 docker-compose up -d
@@ -149,6 +158,7 @@ AntigelCluj/
 │   │   ├── rate_limiter.py      # Fail2Ban-style sliding window (Redis/in-memory)
 │   │   └── channels/
 │   │       ├── email_sender.py  # smtplib → Mailhog
+│   │       ├── calendar_sender.py # iCalendar invite (auto-adds to Gmail/Outlook)
 │   │       ├── sms_sender.py    # Mock adapter
 │   │       ├── telegram_sender.py
 │   │       ├── discord_sender.py
@@ -178,17 +188,44 @@ AntigelCluj/
 
 ## 🔬 Technical Details
 
-### Anomaly Detection
+## 🧠 The Detection Engine: How It Works
 
-- **Algorithm**: Minimum Covariance Determinant (MCD) via `sklearn.covariance.MinCovDet`
-- **Feature vector** (8 dimensions per login event):
-  ```
-  [hour_of_day, day_of_week, login_failures_last_hour,
-   ip_is_new, device_is_new, geo_distance_km,
-   time_since_last_login_hrs, typing_speed_ms]
-  ```
-- **Threshold**: `chi2.ppf(0.975, df=8)` ≈ 17.53 (Mahalanobis distance)
-- **GPU path** (optional): Train an LSTM autoencoder with PyTorch, export to ONNX, toggle with `ANOMALY_ENGINE=onnx`
+PhishGuard uses a multi-layered behavioral analysis engine to distinguish between legitimate users and attackers.
+
+### 1. Feature Engineering (The 8-D Vector)
+Every login attempt is transformed into an 8-dimensional feature vector:
+- **Hour of Day**: Captures circadian rhythms (e.g., a 3 AM login for a 9-to-5 employee).
+- **Day of Week**: Detects weekend anomalies.
+- **Failures (Last Hour)**: A primary indicator of brute-force or credential stuffing.
+- **IP Novelty**: Binary flag (0 or 1) checking if the IP has ever been seen for this account.
+- **Device Novelty**: Binary flag for User-Agent/Fingerprint novelty.
+- **Geo-Distance (km)**: Calculate Great-Circle distance between current login and the account's registered "home" city using MaxMind/IP-Geo. Detects "impossible travel."
+- **Time Since Last Login**: Hours since the last successful session.
+- **Typing Speed (ms)**: Measures the cadence of credential entry (bots often have perfect, uniform timing).
+
+### 2. The Mahalanobis Distance Engine
+Unlike simple "thresholding" (e.g., "if failures > 3"), PhishGuard uses **Mahalanobis Distance**. 
+
+**Why?** Because it accounts for **correlations** between features. 
+- A 3 AM login from a new IP is highly suspicious.
+- A 3 AM login from your home IP (where you usually log in) is less suspicious.
+Mahalanobis measures how many standard deviations "away" a point is from the center of the normal data cluster, considering the shape (covariance) of that cluster.
+
+### 3. Robust Covariance (MCD)
+We use the **Minimum Covariance Determinant (MCD)** algorithm (`sklearn.covariance.MinCovDet`).
+- **The Problem**: If an attacker managed to perform 10 "normal-looking" logins during your training phase, they would "pollute" the model.
+- **The Solution**: MCD finds the "cleanest" 75% of the data points to calculate the center and shape of "Normal." It effectively ignores outliers during training to ensure the baseline is pure.
+
+### 4. Statistical Thresholding (Chi-Squared)
+We apply a **Chi-Squared Distribution** threshold. At a 97.5% confidence level for 8 degrees of freedom (our 8 features), the critical value is **17.53**.
+- **Score < 17.53**: Within the expected behavioral elliptical "envelope."
+- **Score > 17.53**: High probability of being an outlier (anomalous).
+
+### 5. Advanced GPU Path: LSTM Autoencoder
+For high-volume deployments, the `ml/` directory contains a PyTorch-based **LSTM Autoencoder**:
+- It learns to "compress" and "reconstruct" sequences of normal login behavior.
+- **Detection**: If we feed an attack login through the model, it fails to reconstruct it accurately. The **reconstruction error** (MSE) becomes our anomaly score.
+- This path is exported to **ONNX** for ultra-fast, GPU-accelerated inference.
 
 ### Rate Limiting (Fail2Ban-style)
 
@@ -202,6 +239,20 @@ AntigelCluj/
 - Fake bank login page with glassmorphism dark UI
 - Each target gets a unique UUID token in their link for tracking
 - Click tracking → credential capture → redirect to real site
+
+### 📅 Calendar Invite Attack (adapted from [Tangled](https://github.com/ineesdv/Tangled))
+
+PhishGuard weaponizes **iCalendar automatic event processing** (RFC 5546) to deliver phishing via spoofed calendar invites:
+
+1. **How it works**: When a `text/calendar` MIME part with `METHOD:REQUEST` is sent via email, both Gmail and Microsoft Outlook **automatically add the event** to the recipient's calendar — **no user interaction required**.
+2. **The attack**: PhishGuard generates an `.ics` VCALENDAR with:
+   - A spoofed organizer (e.g., `IT Security Team <security@company-it.com>`)
+   - The target as an `ATTENDEE` with `PARTSTAT=ACCEPTED` (appears as if they already accepted)
+   - The phishing URL embedded in the `DESCRIPTION` field and optionally as a `X-GOOGLE-CONFERENCE` or `X-MICROSOFT-SKYPETEAMSMEETINGURL` (mimics a Google Meet or Teams link)
+   - A `VALARM` trigger that fires a reminder 15 minutes before — popping up the phishing link again
+3. **Why it's effective**: The event appears on the victim's calendar with a notification, making it look like a legitimate corporate meeting. The phishing link is embedded as "Join meeting" — users trust calendar events more than emails.
+4. **Supported providers**: Gmail (Google Workspace) and Microsoft Outlook (O365/Exchange)
+
 
 ---
 

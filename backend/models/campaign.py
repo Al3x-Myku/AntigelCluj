@@ -29,6 +29,7 @@ class Campaign(Base):
     use_telegram = Column(Integer, default=0)
     use_discord = Column(Integer, default=0)
     use_instagram = Column(Integer, default=0)
+    use_calendar = Column(Integer, default=0)  # Google Calendar invite channel
 
     # Stats (cached counters for quick reads)
     total_targets = Column(Integer, default=0)
@@ -58,6 +59,7 @@ class Campaign(Base):
                 "telegram": bool(self.use_telegram),
                 "discord": bool(self.use_discord),
                 "instagram": bool(self.use_instagram),
+                "calendar": bool(self.use_calendar),
             },
             "stats": {
                 "total_targets": self.total_targets,
@@ -75,7 +77,7 @@ class CampaignMessage(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     campaign_id = Column(Integer, ForeignKey("campaigns.id"), nullable=False)
     channel = Column(
-        Enum("email", "sms", "whatsapp", "telegram", "discord", "instagram", name="channel_type"),
+        Enum("email", "sms", "whatsapp", "telegram", "discord", "instagram", "calendar", name="channel_type"),
         nullable=False,
     )
     subject = Column(String(500), nullable=True)  # Email subject

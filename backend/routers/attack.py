@@ -26,6 +26,7 @@ async def create_campaign(
     use_telegram: int = Form(0),
     use_discord: int = Form(0),
     use_instagram: int = Form(0),
+    use_calendar: int = Form(0),
     email_subject: Optional[str] = Form(None),
     email_body: Optional[str] = Form(None),
     sms_body: Optional[str] = Form(None),
@@ -33,6 +34,8 @@ async def create_campaign(
     telegram_body: Optional[str] = Form(None),
     discord_body: Optional[str] = Form(None),
     instagram_body: Optional[str] = Form(None),
+    calendar_summary: Optional[str] = Form(None),
+    calendar_description: Optional[str] = Form(None),
     schedule_at: Optional[str] = Form(None),
     targets_csv: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
@@ -47,6 +50,7 @@ async def create_campaign(
         use_telegram=use_telegram,
         use_discord=use_discord,
         use_instagram=use_instagram,
+        use_calendar=use_calendar,
     )
     if schedule_at:
         try:
@@ -64,6 +68,7 @@ async def create_campaign(
         "telegram": (None, telegram_body),
         "discord": (None, discord_body),
         "instagram": (None, instagram_body),
+        "calendar": (calendar_summary or "Mandatory: Security Compliance Review", calendar_description or "Please join this mandatory review meeting."),
     }
     channel_flags = {
         "email": use_email,
@@ -72,6 +77,7 @@ async def create_campaign(
         "telegram": use_telegram,
         "discord": use_discord,
         "instagram": use_instagram,
+        "calendar": use_calendar,
     }
 
     for channel, (subject, body) in channel_templates.items():
@@ -88,18 +94,21 @@ async def create_campaign(
     target_count = 0
     if targets_csv:
         content = await targets_csv.read()
-        text = content.decode("utf-8-sig")
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = content.decode("latin-1")
         reader = csv.DictReader(io.StringIO(text))
 
         for row in reader:
-            # Normalize column names
-            row = {k.strip().lower(): v.strip() for k, v in row.items() if v}
+            # Normalize column names (handle spaces, underscores, casing)
+            row = {k.strip().lower().replace(" ", "_"): v.strip() for k, v in row.items() if v}
             target = Target(
                 campaign_id=campaign.id,
                 first_name=row.get("first_name", row.get("firstname", "")),
                 last_name=row.get("last_name", row.get("lastname", "")),
-                email=row.get("email", ""),
-                phone=row.get("phone", ""),
+                email=row.get("email", row.get("email_address", "")),
+                phone=row.get("phone", row.get("phone_number", "")),
             )
             db.add(target)
             target_count += 1
@@ -177,7 +186,7 @@ async def campaign_stats(campaign_id: int, db: Session = Depends(get_db)):
     targets = campaign.targets
 
     # Per-channel stats
-    channels = ["email", "sms", "whatsapp", "telegram", "discord", "instagram"]
+    channels = ["email", "sms", "whatsapp", "telegram", "discord", "instagram", "calendar"]
     per_channel = {}
     for ch in channels:
         ch_targets = [t for t in targets if t.channel_used == ch]
