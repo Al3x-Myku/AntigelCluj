@@ -79,7 +79,7 @@
                     <label class="form-label">Upload CSV File</label>
                     <input type="file" name="targets_csv" class="form-control" accept=".csv">
                     <div class="template-hint mt-2">
-                        CSV columns: <code>first_name, last_name, email, phone</code>
+                        CSV columns: <code>first_name, last_name, email</code>
                         <br><a href="#" id="downloadTemplate" class="text-primary">Download template CSV →</a>
                     </div>
                 </div>
@@ -251,7 +251,7 @@ Join: {{link}}</textarea>
         // CSV template download
         document.getElementById('downloadTemplate').addEventListener('click', (e) => {
             e.preventDefault();
-            const csv = 'first_name,last_name,email,phone\nJohn,Doe,john@example.com,+40712345678\nJane,Smith,jane@example.com,+40723456789\n';
+            const csv = 'first_name,last_name,email\nJohn,Doe,john@example.com\nJane,Smith,jane@example.com\n';
             const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);

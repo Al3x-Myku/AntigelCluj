@@ -152,8 +152,8 @@ def send_via_channel(channel: str, target: Target, subject: str, body: str, phis
         from backend.services.channels.discord_sender import send_discord
         return send_discord(target.email, body)
     elif channel == "whatsapp":
-        from backend.services.channels.sms_sender import send_sms  # WhatsApp uses same mock
-        return send_sms(target.phone, body)
+        from backend.services.channels.whatsapp_sender import send_whatsapp
+        return send_whatsapp(target.phone, body)
     elif channel == "instagram":
         from backend.services.channels.instagram_sender import send_instagram
         return send_instagram(target.email, body)

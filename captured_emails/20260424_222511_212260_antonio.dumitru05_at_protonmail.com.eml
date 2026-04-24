@@ -1,0 +1,40 @@
+Content-Type: multipart/alternative; boundary="===============8653794448992480022=="
+MIME-Version: 1.0
+Subject: Action Required: Verify Your SecureBank Account
+From: SecureBank Security Team <security@securebank-verify.com>
+To: antonio.dumitru05@protonmail.com
+X-Peer: ('127.0.0.1', 50482)
+X-MailFrom: security@securebank-verify.com
+X-RcptTo: antonio.dumitru05@protonmail.com
+
+--===============8653794448992480022==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Dear Antonio Dumitru,
+We detected unusual activity on your SecureBank account. Please verify immediately.
+Verify Account Now
+SecureBank Security Team
+
+--===============8653794448992480022==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<head><style>
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .btn { display: inline-block; padding: 12px 30px; background: #1565c0;
+            color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    .footer { color: #999; font-size: 12px; margin-top: 30px; }
+</style></head>
+<body>
+<div class="container">
+<p>Dear Antonio Dumitru,</p><p>We detected unusual activity on your SecureBank account. Please verify immediately.</p><p><a href="http://localhost:8000/phish/7b31126e-d425-4cfb-92a6-e2632d05975d">Verify Account Now</a></p><p>SecureBank Security Team</p>
+</div>
+</body>
+</html>
+--===============8653794448992480022==--
