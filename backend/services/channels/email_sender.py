@@ -1,8 +1,16 @@
-"""Email sender — sends phishing emails via SMTP (Mailhog in dev)."""
+"""Email sender — sends phishing emails via SMTP.
+
+Supports:
+  - Mailhog (port 1025, no auth)
+  - Gmail SMTP (port 587, STARTTLS + app password)
+  - Any relay with optional TLS + auth
+"""
 
 import os
+import ssl
 import smtplib
 import logging
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -10,12 +18,15 @@ logger = logging.getLogger(__name__)
 
 SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
-FROM_EMAIL = "security@securebank-verify.com"
-FROM_NAME = "SecureBank Security Team"
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_TLS = os.getenv("SMTP_TLS", "false").lower() in ("true", "1", "yes")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "security@securebank-verify.com")
+FROM_NAME = os.getenv("FROM_NAME", "SecureBank Security Team")
 
 
 def send_email(to_email: str, subject: str, body_html: str) -> bool:
-    """Send an email via SMTP (Mailhog in development)."""
+    """Send an email via SMTP."""
     if not to_email:
         logger.warning("No email address provided")
         return False
@@ -48,14 +59,28 @@ def send_email(to_email: str, subject: str, body_html: str) -> bool:
 
         # Also add plain text version
         plain_text = body_html.replace("<br>", "\n").replace("</p>", "\n")
-        import re
         plain_text = re.sub(r"<[^>]+>", "", plain_text)
 
         msg.attach(MIMEText(plain_text, "plain"))
         msg.attach(MIMEText(html_body, "html"))
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        # Connect with optional TLS and authentication
+        if SMTP_TLS or SMTP_PORT == 587:
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
+            server.ehlo()
+            server.starttls(context=ssl.create_default_context())
+            server.ehlo()
+        elif SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30,
+                                       context=ssl.create_default_context())
+        else:
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
+
+        if SMTP_USER and SMTP_PASS:
+            server.login(SMTP_USER, SMTP_PASS)
+
+        server.sendmail(FROM_EMAIL, to_email, msg.as_string())
+        server.quit()
 
         logger.info(f"Email sent to {to_email}")
         return True

@@ -1,0 +1,40 @@
+Content-Type: multipart/alternative; boundary="===============2784065482326301530=="
+MIME-Version: 1.0
+Subject: Action Required: Verify Your SecureBank Account
+From: SecureBank Security Team <security@securebank-verify.com>
+To: bogdijidovu@gmail.com
+X-Peer: ('127.0.0.1', 50472)
+X-MailFrom: security@securebank-verify.com
+X-RcptTo: bogdijidovu@gmail.com
+
+--===============2784065482326301530==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Dear Bogdan Jidovu,
+We detected unusual activity on your SecureBank account. Please verify immediately.
+Verify Account Now
+SecureBank Security Team
+
+--===============2784065482326301530==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<head><style>
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .btn { display: inline-block; padding: 12px 30px; background: #1565c0;
+            color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    .footer { color: #999; font-size: 12px; margin-top: 30px; }
+</style></head>
+<body>
+<div class="container">
+<p>Dear Bogdan Jidovu,</p><p>We detected unusual activity on your SecureBank account. Please verify immediately.</p><p><a href="http://localhost:8000/phish/abfee45c-983d-497d-a49a-ce1e8e23d42c">Verify Account Now</a></p><p>SecureBank Security Team</p>
+</div>
+</body>
+</html>
+--===============2784065482326301530==--

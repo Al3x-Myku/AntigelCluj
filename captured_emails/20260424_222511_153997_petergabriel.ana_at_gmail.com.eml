@@ -1,0 +1,40 @@
+Content-Type: multipart/alternative; boundary="===============3266066477019471653=="
+MIME-Version: 1.0
+Subject: Action Required: Verify Your SecureBank Account
+From: SecureBank Security Team <security@securebank-verify.com>
+To: petergabriel.ana@gmail.com
+X-Peer: ('127.0.0.1', 50464)
+X-MailFrom: security@securebank-verify.com
+X-RcptTo: petergabriel.ana@gmail.com
+
+--===============3266066477019471653==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Dear Peter Ana,
+We detected unusual activity on your SecureBank account. Please verify immediately.
+Verify Account Now
+SecureBank Security Team
+
+--===============3266066477019471653==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+<head><style>
+    body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .btn { display: inline-block; padding: 12px 30px; background: #1565c0;
+            color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold; }
+    .footer { color: #999; font-size: 12px; margin-top: 30px; }
+</style></head>
+<body>
+<div class="container">
+<p>Dear Peter Ana,</p><p>We detected unusual activity on your SecureBank account. Please verify immediately.</p><p><a href="http://localhost:8000/phish/46aba970-8809-410f-a206-2128d1c5d50e">Verify Account Now</a></p><p>SecureBank Security Team</p>
+</div>
+</body>
+</html>
+--===============3266066477019471653==--
