@@ -1,211 +1,338 @@
+<!-- Red Team: Campaign Analytics (Simple) -->
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard — Campaign Detail</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
-        body { background: #0b1120; color: #e2e8f0; min-height: 100vh; }
-        .glass-card {
-            background: rgba(30,41,59,0.5); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 1.5rem;
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhishGuard - Analytics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
         }
-        .stat-number { font-size: 2rem; font-weight: 800; line-height: 1; }
-        .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        .gradient-red { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-blue { background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-green { background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .btn-launch { background: linear-gradient(135deg, #ef4444, #f97316); border: none; border-radius: 12px; padding: 0.6rem 1.5rem; font-weight: 700; color: #fff; }
-        .btn-launch:hover { box-shadow: 0 0 30px rgba(239,68,68,0.4); color: #fff; }
-        .chart-container { position: relative; height: 280px; }
-        .table-dark-custom { background: transparent; }
-        .table-dark-custom th { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
-        .table-dark-custom td { border-color: rgba(255,255,255,0.04); font-size: 0.9rem; }
-        #nav-placeholder { position: sticky; top: 0; z-index: 1050; }
-        .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block; animation: blink 1.5s infinite; }
-        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
     </style>
-</head>
-<body>
-    <div id="nav-placeholder"></div>
-    <div class="container-fluid px-4 py-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div>
-                <a href="/attack/" class="text-white-50 text-decoration-none mb-1 d-inline-block">← Campaigns</a>
-                <h2 class="fw-800 mb-0" id="campaignName">Loading...</h2>
-                <div class="d-flex align-items-center gap-2 mt-1">
-                    <span id="campaignStatus"></span>
-                    <span class="live-dot" id="liveDot" style="display:none"></span>
-                    <span class="text-white-50" style="font-size:0.8rem" id="liveLabel"></span>
-                </div>
-            </div>
-            <button class="btn btn-launch" id="launchBtn" onclick="launchCampaign()" style="display:none">
-                🚀 Launch Campaign
-            </button>
-        </div>
-
-        <!-- Live Counters -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number gradient-blue" id="cntTargets">0</div><div class="stat-label">Targets</div></div></div>
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number gradient-green" id="cntSent">0</div><div class="stat-label">Sent</div></div></div>
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number" style="color:#f59e0b" id="cntClicked">0</div><div class="stat-label">Clicked</div></div></div>
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number gradient-red" id="cntSubmitted">0</div><div class="stat-label">Submitted</div></div></div>
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number" style="color:#f43f5e" id="cntFailed">0</div><div class="stat-label">Failed</div></div></div>
-            <div class="col-6 col-lg-2"><div class="glass-card text-center"><div class="stat-number" style="color:#64748b" id="cntPending">0</div><div class="stat-label">Pending</div></div></div>
-        </div>
-
-        <!-- Charts Row -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">📊 Funnel: Sent → Clicked → Submitted</h6>
-                    <div class="chart-container"><canvas id="funnelChart"></canvas></div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">📡 Per-Channel Breakdown</h6>
-                    <div class="chart-container"><canvas id="channelChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-        <div class="row g-3 mb-4">
-            <div class="col-lg-8">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">📈 Timeline: Messages Sent Over Time</h6>
-                    <div class="chart-container"><canvas id="timelineChart"></canvas></div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">🕐 Heatmap: Clicks by Hour</h6>
-                    <div class="chart-container"><canvas id="heatmapChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Target Table -->
-        <div class="glass-card">
-            <h6 class="fw-700 mb-3">🎯 Targets</h6>
-            <div class="table-responsive">
-                <table class="table table-dark-custom mb-0">
-                    <thead><tr><th>Name</th><th>Email</th><th>Channel</th><th>Status</th><th>Clicked</th><th>Submitted</th><th>IP</th></tr></thead>
-                    <tbody id="targetBody"><tr><td colspan="7" class="text-center text-white-50 py-3">Loading...</td></tr></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/shared/charts.js"></script>
-    <script>
-        fetch('/static/shared/nav.html').then(r => r.text()).then(html => document.getElementById('nav-placeholder').innerHTML = html);
-
-        const campaignId = window.location.pathname.split('/').filter(Boolean).pop();
-        let funnelChartObj, channelChartObj, timelineChartObj, heatmapChartObj;
-
-        // Load campaign detail
-        function loadDetail() {
-            fetch(`/api/attack/campaigns/${campaignId}`)
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('campaignName').textContent = data.name;
-                    document.getElementById('campaignStatus').innerHTML = statusBadge(data.status);
-                    if (data.status === 'draft' || data.status === 'failed') {
-                        document.getElementById('launchBtn').style.display = 'inline-block';
-                    } else {
-                        document.getElementById('launchBtn').style.display = 'none';
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#472a00",
+                        "secondary-container": "#00a572",
+                        "surface-container-high": "#222a3d",
+                        "surface-bright": "#31394d",
+                        "outline-variant": "#3d494c",
+                        "outline": "#869397",
+                        "on-secondary-container": "#00311f",
+                        "primary-container": "#06b6d4",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "secondary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#e79400",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#2a1700",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb95f",
+                        "surface": "#0b1326",
+                        "surface-container": "#171f33",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "primary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#0b1326",
+                        "on-secondary": "#003824",
+                        "surface-container-low": "#131b2e",
+                        "surface-dim": "#0b1326",
+                        "on-tertiary-container": "#563400",
+                        "on-background": "#dae2fd",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00424f",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "on-surface-variant": "#bcc9cd",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-primary": "#00687a",
+                        "primary-fixed": "#acedff",
+                        "secondary": "#4edea3",
+                        "surface-tint": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2d3449"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "margin": "2rem",
+                        "base": "4px",
+                        "lg": "1.5rem",
+                        "gutter": "1.25rem",
+                        "sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
                     }
-                    if (data.status === 'running' || data.status === 'queued') {
-                        document.getElementById('liveDot').style.display = 'inline-block';
-                        document.getElementById('liveLabel').textContent = 'Live — updating every 3s';
-                    }
-                    // Targets table
-                    const targets = data.targets || [];
-                    const body = document.getElementById('targetBody');
-                    if (targets.length > 0) {
-                        body.innerHTML = targets.map(t => `<tr>
-                            <td>${t.name || '-'}</td>
-                            <td class="text-white-50">${t.email || '-'}</td>
-                            <td>${t.channel_used ? `<span class="badge bg-secondary">${t.channel_used}</span>` : '-'}</td>
-                            <td>${statusBadge(t.status)}</td>
-                            <td>${t.clicked_at ? new Date(t.clicked_at).toLocaleTimeString() : '-'}</td>
-                            <td>${t.submitted_at ? '<span class="text-danger">✓ Captured</span>' : '-'}</td>
-                            <td class="text-white-50">${t.ip_address || '-'}</td>
-                        </tr>`).join('');
-                    }
-                });
+                }
+            }
         }
-
-        // Load stats (polling)
-        function loadStats() {
-            fetch(`/api/attack/stats/${campaignId}`)
-                .then(r => r.json())
-                .then(data => {
-                    const t = data.totals;
-                    document.getElementById('cntTargets').textContent = t.targets;
-                    document.getElementById('cntSent').textContent = t.sent;
-                    document.getElementById('cntClicked').textContent = t.clicked;
-                    document.getElementById('cntSubmitted').textContent = t.submitted;
-                    document.getElementById('cntFailed').textContent = t.failed;
-                    document.getElementById('cntPending').textContent = t.pending;
-
-                    // Destroy and recreate charts (simpler than updating)
-                    if (funnelChartObj) funnelChartObj.destroy();
-                    if (channelChartObj) channelChartObj.destroy();
-                    if (timelineChartObj) timelineChartObj.destroy();
-                    if (heatmapChartObj) heatmapChartObj.destroy();
-
-                    funnelChartObj = createFunnelChart('funnelChart', data.funnel);
-                    channelChartObj = createChannelChart('channelChart', data.per_channel);
-                    if (Object.keys(data.timeline).length > 0) {
-                        timelineChartObj = createTimelineChart('timelineChart', data.timeline);
-                    }
-
-                    // Heatmap as bar chart
-                    const heatCtx = document.getElementById('heatmapChart');
-                    if (heatCtx) {
-                        const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-                        const heatData = hours.map((_, i) => data.heatmap[i] || 0);
-                        heatmapChartObj = new Chart(heatCtx, {
-                            type: 'bar',
-                            data: {
-                                labels: hours,
-                                datasets: [{ data: heatData, backgroundColor: heatData.map(v => v > 0 ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.05)'), borderRadius: 3 }]
-                            },
-                            options: {
-                                responsive: true, maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
-                                scales: {
-                                    x: { grid: { display: false }, ticks: { maxRotation: 90, font: { size: 9 } } },
-                                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
-                                }
-                            }
-                        });
-                    }
-                });
-        }
-
-        async function launchCampaign() {
-            const btn = document.getElementById('launchBtn');
-            btn.disabled = true; btn.textContent = 'Launching...';
-            try {
-                const resp = await fetch(`/api/attack/campaigns/${campaignId}/launch`, { method: 'POST' });
-                const data = await resp.json();
-                if (resp.ok) { loadDetail(); loadStats(); }
-                else alert(data.detail || 'Launch failed');
-            } catch (e) { alert('Launch error: ' + e.message); }
-            btn.disabled = false; btn.textContent = '🚀 Launch Campaign';
-        }
-
-        loadDetail();
-        loadStats();
-        setInterval(loadStats, 3000);
-        setInterval(loadDetail, 5000);
     </script>
-</body>
-</html>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="bg-slate-950 font-inter antialiased text-sm docked full-width top-0 border-b border-b border-slate-800 flat no shadows fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-6">
+<div class="text-xl font-bold tracking-tighter text-cyan-500 cursor-pointer" onclick="window.location.href='/'">
+                PhishGuard
+            </div>
+</div>
+<nav class="flex items-center gap-1 h-full">
+<a class="text-cyan-500 font-semibold border-b-2 border-cyan-500 pb-1 h-full flex items-center px-4 cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200" href="/attack/">
+                Red Team
+            </a>
+<a class="text-slate-400 font-medium hover:text-slate-200 h-full flex items-center px-4 cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200" href="/defense/">
+                Blue Team
+            </a>
+</nav>
+<div class="flex items-center gap-4 text-cyan-500">
+<button class="cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700 ml-2">
+<img alt="Security Analyst" class="w-full h-full object-cover" data-alt="Close up professional headshot of a security analyst in dark lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2vVUye0L1lw-szaT2kpHJQKlsMR1Ml44FWO_eI1oFgsEgdupxsaepK93RufS4FpQ6eYQ8nkdN7JYgLF3PhTPJPNkWe8t-0A3ais7dYeEN8sqeTuI0WGlXpcOs9YCf1bO445WjkjdfPPqW2Ai8ag4LZ47aDjZYj8JUTt4HIjQtPU7fQeNYNT08MQkDxFTMlKr7HrHT6ZOhfRsYfduwT5KVws7YwBCbgqRD04sALDjZS1H0L7UXpBy3_xCX619d0t1VBPI39e-pq3th"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="bg-slate-950 font-inter text-xs uppercase tracking-widest font-semibold docked h-full w-64 left-0 border-r border-r border-slate-800 flat no shadows fixed left-0 top-16 bottom-0 w-64 flex flex-col py-4 z-40">
+<div class="px-6 py-4 mb-4 border-b border-slate-800/50">
+<div class="text-cyan-500 tracking-normal capitalize font-bold text-sm">Operations</div>
+<div class="text-slate-500 tracking-normal capitalize font-normal text-xs mt-1">Global Intel</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1 px-2">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800 rounded-sm" href="/attack/">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                Overview
+            </a>
+<a class="bg-slate-900 text-cyan-400 border-l-2 border-cyan-500 px-4 py-3 flex items-center gap-3 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bar_chart</span>
+                Analytics
+            </a>
+</nav>
+<div class="mt-auto px-2 border-t border-slate-800/50 pt-4 flex flex-col gap-1">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">help</span>
+                Support
+            </a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800 rounded-sm" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-16 min-h-screen bg-background">
+<div class="p-lg max-w-7xl mx-auto space-y-md">
+<!-- Page Header -->
+<div class="flex items-center justify-between pb-sm border-b border-outline-variant">
+<div>
+<a href="/attack/" class="text-outline hover:text-primary mb-2 inline-block">← Back to Campaigns</a>
+<h1 class="font-h1 text-h1 text-on-surface" id="campaignName">Loading...</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1" id="campaignStatus">Analytics</p>
+</div>
+<div class="flex gap-sm">
+<button class="bg-primary hover:bg-primary-fixed text-on-primary font-h2 text-h2 py-sm px-xl rounded-DEFAULT flex items-center gap-2 transition-colors duration-200" id="launchBtn" style="display:none" onclick="launchCampaign()">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+                    Execute Campaign
+                </button>
+</div>
+</div>
+<!-- KPI Counters (Flat Cards) -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Total Targets</span>
+<span class="font-h1 text-h1 text-on-surface mt-xs" id="cntTargets">0</span>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Sent</span>
+<span class="font-h1 text-h1 text-on-surface mt-xs" id="cntSent">0</span>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Clicked</span>
+<span class="font-h1 text-h1 text-on-surface mt-xs text-tertiary" id="cntClicked">0</span>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Submitted</span>
+<span class="font-h1 text-h1 text-on-surface mt-xs text-error" id="cntSubmitted">0</span>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter">
+<!-- Funnel Chart Card -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<div class="mb-lg pb-sm border-b border-outline-variant">
+<h2 class="font-h2 text-h2 text-on-surface">Campaign Progression</h2>
+</div>
+<div class="flex-1 flex flex-col justify-center space-y-md">
+<canvas id="funnelChart" style="height: 250px;"></canvas>
+</div>
+</div>
+<!-- Channel Breakdown -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md flex flex-col">
+<div class="mb-lg pb-sm border-b border-outline-variant">
+<h2 class="font-h2 text-h2 text-on-surface">Channel Breakdown</h2>
+</div>
+<div class="flex-1 flex flex-col justify-center space-y-md">
+<canvas id="channelChart" style="height: 250px;"></canvas>
+</div>
+</div>
+</div>
+<!-- Heat Map Section (Used for Targets Table here) -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-md">
+<div class="mb-lg pb-sm border-b border-outline-variant flex justify-between items-end">
+<h2 class="font-h2 text-h2 text-on-surface">Targets</h2>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm border-collapse min-w-[600px]">
+<thead>
+<tr class="text-on-surface-variant font-label-caps text-label-caps uppercase">
+<th class="p-2 font-normal">Name</th>
+<th class="p-2 font-normal">Email</th>
+<th class="p-2 font-normal">Channel</th>
+<th class="p-2 font-normal">Status</th>
+<th class="p-2 font-normal">Clicked</th>
+<th class="p-2 font-normal">Submitted</th>
+</tr>
+</thead>
+<tbody class="text-on-surface border-t border-outline-variant" id="targetBody">
+<tr><td colspan="6" class="text-center py-4">Loading targets...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<script src="/static/shared/charts.js"></script>
+<script>
+    const campaignId = window.location.pathname.split('/').filter(Boolean).pop();
+    let funnelChartObj, channelChartObj;
+
+    function statusBadge(status) {
+        const colors = {
+            draft: 'outline',
+            running: 'secondary',
+            queued: 'primary',
+            completed: 'primary',
+            failed: 'error'
+        };
+        const color = colors[status] || 'outline';
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded border border-${color} text-${color} bg-${color}/10 font-label-caps text-label-caps">${status}</span>`;
+    }
+
+    function loadDetail() {
+        fetch(`/api/attack/campaigns/${campaignId}`)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('campaignName').textContent = data.name;
+                document.getElementById('campaignStatus').innerHTML = statusBadge(data.status);
+                if (data.status === 'draft' || data.status === 'failed') {
+                    document.getElementById('launchBtn').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('launchBtn').style.display = 'none';
+                }
+                
+                // Targets table
+                const targets = data.targets || [];
+                const body = document.getElementById('targetBody');
+                if (targets.length > 0) {
+                    body.innerHTML = targets.map(t => `<tr>
+                        <td class="p-2 border-b border-outline-variant/30">${t.name || '-'}</td>
+                        <td class="p-2 border-b border-outline-variant/30 text-outline">${t.email || '-'}</td>
+                        <td class="p-2 border-b border-outline-variant/30">${t.channel_used ? `<span class="bg-surface-container px-1 rounded">${t.channel_used}</span>` : '-'}</td>
+                        <td class="p-2 border-b border-outline-variant/30">${statusBadge(t.status)}</td>
+                        <td class="p-2 border-b border-outline-variant/30 text-tertiary">${t.clicked_at ? new Date(t.clicked_at).toLocaleTimeString() : '-'}</td>
+                        <td class="p-2 border-b border-outline-variant/30 text-error">${t.submitted_at ? 'Captured' : '-'}</td>
+                    </tr>`).join('');
+                }
+            });
+    }
+
+    function loadStats() {
+        fetch(`/api/attack/stats/${campaignId}`)
+            .then(r => r.json())
+            .then(data => {
+                const t = data.totals;
+                document.getElementById('cntTargets').textContent = t.targets;
+                document.getElementById('cntSent').textContent = t.sent;
+                document.getElementById('cntClicked').textContent = t.clicked;
+                document.getElementById('cntSubmitted').textContent = t.submitted;
+
+                if (funnelChartObj) funnelChartObj.destroy();
+                if (channelChartObj) channelChartObj.destroy();
+
+                funnelChartObj = createFunnelChart('funnelChart', data.funnel);
+                channelChartObj = createChannelChart('channelChart', data.per_channel);
+            });
+    }
+
+    async function launchCampaign() {
+        const btn = document.getElementById('launchBtn');
+        btn.disabled = true; btn.textContent = 'Launching...';
+        try {
+            const resp = await fetch(`/api/attack/campaigns/${campaignId}/launch`, { method: 'POST' });
+            const data = await resp.json();
+            if (resp.ok) { loadDetail(); loadStats(); }
+            else alert(data.detail || 'Launch failed');
+        } catch (e) { alert('Launch error: ' + e.message); }
+        btn.disabled = false; btn.innerHTML = '<span class="material-symbols-outlined" style="font-variation-settings: \'FILL\' 1;">rocket_launch</span> Execute Campaign';
+    }
+
+    loadDetail();
+    loadStats();
+    setInterval(loadStats, 3000);
+    setInterval(loadDetail, 5000);
+</script>
+</body></html>

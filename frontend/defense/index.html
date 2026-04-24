@@ -1,237 +1,315 @@
+<!-- Blue Team: Defense Console (Simple) -->
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard — Defense Overview</title>
-    <meta name="description" content="PhishGuard Blue Team Defense Console — anomaly detection, IP bans, and account lockdown overview.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
-        body { background: #0b1120; color: #e2e8f0; min-height: 100vh; }
-        .glass-card {
-            background: rgba(30,41,59,0.5); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 1.5rem;
-            transition: transform 0.2s;
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhishGuard - Blue Team Defense Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#472a00",
+                        "secondary-container": "#00a572",
+                        "surface-container-high": "#222a3d",
+                        "surface-bright": "#31394d",
+                        "outline-variant": "#3d494c",
+                        "outline": "#869397",
+                        "on-secondary-container": "#00311f",
+                        "primary-container": "#06b6d4",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "secondary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#e79400",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#2a1700",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb95f",
+                        "surface": "#0b1326",
+                        "surface-container": "#171f33",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "primary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#0b1326",
+                        "on-secondary": "#003824",
+                        "surface-container-low": "#131b2e",
+                        "surface-dim": "#0b1326",
+                        "on-tertiary-container": "#563400",
+                        "on-background": "#dae2fd",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00424f",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "on-surface-variant": "#bcc9cd",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-primary": "#00687a",
+                        "primary-fixed": "#acedff",
+                        "secondary": "#4edea3",
+                        "surface-tint": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2d3449"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "margin": "2rem",
+                        "base": "4px",
+                        "lg": "1.5rem",
+                        "gutter": "1.25rem",
+                        "sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
         }
-        .glass-card:hover { transform: translateY(-2px); }
-        .stat-number { font-size: 2.2rem; font-weight: 800; line-height: 1; }
-        .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        .gradient-blue { background: linear-gradient(135deg, #3b82f6, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-red { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-green { background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .chart-container { position: relative; height: 300px; }
-        .alert-card { border-left: 3px solid; border-radius: 8px; padding: 0.8rem 1rem; margin-bottom: 0.5rem; background: rgba(255,255,255,0.03); }
-        .alert-card.critical { border-color: #ef4444; }
-        .alert-card.warning { border-color: #f59e0b; }
-        .alert-card.info { border-color: #3b82f6; }
-        .btn-action { border-radius: 10px; font-weight: 600; border: 1px solid rgba(255,255,255,0.1); padding: 0.6rem 1.2rem; }
-        .btn-train { background: linear-gradient(135deg, #8b5cf6, #6366f1); border: none; color: #fff; }
-        .btn-train:hover { box-shadow: 0 0 25px rgba(139,92,246,0.4); color: #fff; }
-        .btn-score { background: linear-gradient(135deg, #06b6d4, #3b82f6); border: none; color: #fff; }
-        .btn-score:hover { box-shadow: 0 0 25px rgba(6,182,212,0.4); color: #fff; }
-        #nav-placeholder { position: sticky; top: 0; z-index: 1050; }
+    </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
     </style>
 </head>
-<body>
-    <div id="nav-placeholder"></div>
-    <div class="container-fluid px-4 py-3">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-            <div>
-                <h1 class="fw-800"><span class="gradient-blue">🛡 Defense Overview</span></h1>
-                <p class="text-white-50 mb-0">Blue Team — Anomaly Detection, Rate Limiting & Account Protection</p>
-            </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-train btn-action" onclick="trainModel()">🧠 Train Model</button>
-                <button class="btn btn-score btn-action" onclick="scoreEvents()">📊 Score Events</button>
-            </div>
-        </div>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased overflow-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-50 bg-slate-950 border-b border-slate-800 font-inter antialiased text-sm">
+<div class="flex items-center gap-4">
+<a href="/"><span class="text-xl font-bold tracking-tighter text-cyan-500">PhishGuard</span></a>
+</div>
+<nav class="flex gap-6 absolute left-1/2 -translate-x-1/2 h-full">
+<a class="h-full flex items-center text-slate-400 font-medium hover:text-slate-200 cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200 px-4" href="/attack/">Red Team</a>
+<a class="h-full flex items-center text-cyan-500 font-semibold border-b-2 border-cyan-500 pb-1 cursor-pointer active:scale-95 px-4" href="/defense/">Blue Team</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-DEFAULT cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-slate-400 hover:text-slate-200 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-DEFAULT cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline flex items-center justify-center overflow-hidden">
+<img alt="Security Analyst" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAV56R1Ea5z5WPLs0mDqgxMaTE2GCNhOlWpTOdNHJ629s2Jx5t2pnqur_LT2f9eUZNpw2QSvL-zHa0Ww7zpQFkyozvG_K3tSXNUNHNfAla33xfVOOaf6lr_eUHaiwXlkOPuulu4KwHmcucMC8vmBBj1UCiilxHhdA5mWSJTBquhuDxxBZRSAuZdaU4NK6VoJPO1AUDvtarunA4Ca0kmMT6ldZdRjBB_hq5kyCa0Lk2Xc5uwe036L4s-10KeWSCXAcYrvqHzh5NBO-Je"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 bottom-0 w-64 flex flex-col py-4 z-40 bg-slate-950 border-r border-slate-800 font-inter text-xs uppercase tracking-widest font-semibold">
+<div class="px-6 mb-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded border border-outline-variant bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">admin_panel_settings</span>
+</div>
+<div>
+<div class="text-slate-200 font-bold tracking-normal text-sm capitalize">Operations</div>
+<div class="text-slate-500 tracking-normal capitalize">Global Intel</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="bg-slate-900 text-cyan-400 border-l-2 border-cyan-500 px-4 py-3 flex items-center gap-3 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/defense/">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/defense/monitor">
+<span class="material-symbols-outlined">security</span>
+<span>Login Monitor</span>
+</a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/defense/lockdown">
+<span class="material-symbols-outlined">lock</span>
+<span>Lockdown Manager</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 border-t border-slate-800 pt-4">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Support</span>
+</a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Sign Out</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="ml-64 mt-16 p-margin h-[calc(100vh-4rem)] overflow-y-auto">
+<div class="flex items-center justify-between mb-gutter">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface">Blue Team Defense Console</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Real-time threat monitoring and anomaly detection.</p>
+</div>
+<div class="flex gap-2">
+    <button class="bg-surface-container-highest border border-outline-variant hover:bg-surface-bright text-on-surface px-4 py-2 rounded-DEFAULT font-body-sm text-body-sm flex items-center gap-2 transition-colors" onclick="simulateAttack()">
+        <span class="material-symbols-outlined text-sm text-error">warning</span> Simulate Attack
+    </button>
+    <button class="bg-surface-container-highest border border-outline-variant hover:bg-surface-bright text-on-surface px-4 py-2 rounded-DEFAULT font-body-sm text-body-sm flex items-center gap-2 transition-colors" onclick="simulateNormal()">
+        <span class="material-symbols-outlined text-sm text-secondary">check_circle</span> Simulate Normal
+    </button>
+    <button class="bg-primary text-on-primary px-4 py-2 rounded font-body-md text-body-md font-medium border border-transparent hover:bg-primary-fixed transition-colors flex items-center gap-2" onclick="trainModel()">
+        <span class="material-symbols-outlined text-[18px]">model_training</span> Train Model
+    </button>
+    <button class="bg-primary text-on-primary px-4 py-2 rounded font-body-md text-body-md font-medium border border-transparent hover:bg-primary-fixed transition-colors flex items-center gap-2" onclick="scoreEvents()">
+        <span class="material-symbols-outlined text-[18px]">score</span> Score Events
+    </button>
+</div>
+</div>
+<!-- Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-gutter">
+<div class="bg-surface border border-outline-variant rounded-lg p-lg flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Processed Events</span>
+<span class="material-symbols-outlined text-outline">data_usage</span>
+</div>
+<div class="font-mono-data text-4xl text-on-surface font-semibold tracking-tight" id="statEvents">0</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-lg flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Active Anomalies</span>
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<div class="font-mono-data text-4xl text-error font-semibold tracking-tight" id="statAnomalies">0</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-lg flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Active IP Bans</span>
+<span class="material-symbols-outlined text-tertiary">block</span>
+</div>
+<div class="font-mono-data text-4xl text-tertiary font-semibold tracking-tight" id="statBans">0</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-lg flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">Accounts Locked</span>
+<span class="material-symbols-outlined text-error">lock</span>
+</div>
+<div class="font-mono-data text-4xl text-error font-semibold tracking-tight" id="statLocked">0</div>
+</div>
+</div>
+<!-- Main Content Area -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter h-[400px]">
+<!-- Histogram Panel -->
+<div class="lg:col-span-8 bg-surface border border-outline-variant rounded-lg flex flex-col">
+<div class="p-md border-b border-outline-variant flex items-center justify-between">
+<h2 class="font-h2 text-h2 text-on-surface">Mahalanobis Distance Distribution</h2>
+<div class="flex gap-2">
+    <span class="text-on-surface-variant text-sm">Threshold: <span id="thresholdVal"></span></span>
+</div>
+</div>
+<div class="flex-1 p-lg relative flex flex-col">
+    <canvas id="histogramChart" style="height: 100%;"></canvas>
+</div>
+</div>
+<!-- Recent Alerts Panel -->
+<div class="lg:col-span-4 bg-surface border border-outline-variant rounded-lg flex flex-col">
+<div class="p-md border-b border-outline-variant flex justify-between items-center bg-surface-container-low rounded-t-lg">
+<h2 class="font-h2 text-h2 text-on-surface">Recent Alerts</h2>
+</div>
+<div class="flex-1 overflow-y-auto p-2 flex flex-col gap-2" id="alertsList">
+    <div class="text-center text-outline py-4">Loading...</div>
+</div>
+</div>
+</div>
+</main>
+<script src="/static/shared/charts.js"></script>
+<script>
+    let histChart;
 
-        <!-- Stats Row -->
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-lg-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number gradient-blue" id="statEvents">0</div>
-                    <div class="stat-label">Total Login Events</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number gradient-red" id="statAnomalies">0</div>
-                    <div class="stat-label">Anomalies Detected</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number" style="color:#f59e0b" id="statBans">0</div>
-                    <div class="stat-label">Active IP Bans</div>
-                </div>
-            </div>
-            <div class="col-6 col-lg-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number" style="color:#ef4444" id="statLocked">0</div>
-                    <div class="stat-label">Accounts Locked</div>
-                </div>
-            </div>
-        </div>
+    function loadDashboard() {
+        fetch('/api/defense/dashboard')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('statEvents').textContent = data.total_events;
+                document.getElementById('statAnomalies').textContent = data.total_anomalies;
+                document.getElementById('statBans').textContent = data.active_bans;
+                document.getElementById('statLocked').textContent = data.locked_accounts;
+                document.getElementById('thresholdVal').textContent = data.threshold?.toFixed(2) || '—';
 
-        <div class="row g-3 mb-4">
-            <!-- Anomaly Score Distribution -->
-            <div class="col-lg-8">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">📊 Mahalanobis Distance Distribution</h6>
-                    <div class="chart-container"><canvas id="histogramChart"></canvas></div>
-                </div>
-            </div>
-            <!-- Quick Actions -->
-            <div class="col-lg-4">
-                <div class="glass-card h-100">
-                    <h6 class="fw-700 mb-3">⚡ Quick Actions</h6>
-                    <div class="d-grid gap-2">
-                        <a href="/defense/monitor" class="btn btn-outline-primary btn-action">👁 Login Monitor</a>
-                        <a href="/defense/lockdown" class="btn btn-outline-danger btn-action">🔒 Lockdown Manager</a>
-                        <button class="btn btn-outline-warning btn-action" onclick="simulateNormal()">🟢 Simulate Normal Login</button>
-                        <button class="btn btn-outline-danger btn-action" onclick="simulateAttack()">🔴 Simulate Attack Login</button>
-                    </div>
-                    <div class="mt-3 p-3 rounded" style="background:rgba(255,255,255,0.03)">
-                        <div class="text-white-50 mb-1" style="font-size:0.75rem">ANOMALY THRESHOLD</div>
-                        <div class="fw-800 fs-5" id="thresholdVal">—</div>
-                        <div class="text-white-50" style="font-size:0.7rem">chi²(0.975, df=8)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                // Histogram
+                if (data.score_distribution && data.score_distribution.length > 0) {
+                    if (histChart) histChart.destroy();
+                    histChart = createHistogram('histogramChart', data.score_distribution, data.threshold);
+                }
 
-        <!-- Recent Alerts + Active Bans -->
-        <div class="row g-3 mb-4">
-            <div class="col-lg-6">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">🚨 Recent Alerts</h6>
-                    <div id="alertsList" style="max-height:300px; overflow-y:auto;">
-                        <div class="text-white-50 text-center py-3">Loading...</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="glass-card">
-                    <h6 class="fw-700 mb-3">🚫 Active IP Bans</h6>
-                    <div id="bansList" style="max-height:300px; overflow-y:auto;">
-                        <div class="text-white-50 text-center py-3">No active bans</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Toast -->
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
-            <div id="statusToast" class="toast" role="alert">
-                <div class="toast-body bg-dark text-white rounded" style="border:1px solid rgba(255,255,255,0.1);" id="toastMsg"></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/shared/charts.js"></script>
-    <script>
-        fetch('/static/shared/nav.html').then(r => r.text()).then(h => document.getElementById('nav-placeholder').innerHTML = h);
-
-        let histChart;
-
-        function showToast(msg) {
-            document.getElementById('toastMsg').textContent = msg;
-            const toast = new bootstrap.Toast(document.getElementById('statusToast'), { delay: 3000 });
-            toast.show();
-        }
-
-        function loadDashboard() {
-            fetch('/api/defense/dashboard')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('statEvents').textContent = data.total_events;
-                    document.getElementById('statAnomalies').textContent = data.total_anomalies;
-                    document.getElementById('statBans').textContent = data.active_bans;
-                    document.getElementById('statLocked').textContent = data.locked_accounts;
-                    document.getElementById('thresholdVal').textContent = data.threshold?.toFixed(2) || '—';
-
-                    // Histogram
-                    if (data.score_distribution && data.score_distribution.length > 0) {
-                        if (histChart) histChart.destroy();
-                        histChart = createHistogram('histogramChart', data.score_distribution, data.threshold);
-                    }
-
-                    // Alerts
-                    const alertsDiv = document.getElementById('alertsList');
-                    if (data.recent_alerts && data.recent_alerts.length > 0) {
-                        alertsDiv.innerHTML = data.recent_alerts.map(a => {
-                            const cls = a.action.includes('lockdown') ? 'critical' : 'info';
-                            const time = new Date(a.timestamp).toLocaleTimeString();
-                            return `<div class="alert-card ${cls}">
-                                <div class="d-flex justify-content-between">
-                                    <strong>${a.action}</strong>
-                                    <span class="text-white-50" style="font-size:0.75rem">${time}</span>
+                // Alerts
+                const alertsDiv = document.getElementById('alertsList');
+                if (data.recent_alerts && data.recent_alerts.length > 0) {
+                    alertsDiv.innerHTML = data.recent_alerts.map(a => {
+                        const isCritical = a.action.includes('lockdown');
+                        const time = new Date(a.timestamp).toLocaleTimeString();
+                        return `<div class="p-3 border border-outline-variant bg-surface-container rounded hover:border-outline cursor-pointer transition-colors group">
+                            <div class="flex items-start justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full ${isCritical ? 'bg-error' : 'bg-primary'}"></div>
+                                    <span class="font-body-md text-body-md font-semibold text-on-surface">${a.action}</span>
                                 </div>
-                                <div class="text-white-50" style="font-size:0.8rem">${a.details || ''}</div>
-                            </div>`;
-                        }).join('');
-                    } else {
-                        alertsDiv.innerHTML = '<div class="text-white-50 text-center py-3">No recent alerts</div>';
-                    }
-
-                    // Bans
-                    const bansDiv = document.getElementById('bansList');
-                    if (data.bans && data.bans.length > 0) {
-                        bansDiv.innerHTML = data.bans.map(b => `<div class="alert-card warning">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>${b.ip || 'Unknown IP'}</strong>
-                                    <span class="badge bg-${b.type === 'hard' ? 'danger' : 'warning'} ms-2">${b.type}</span>
-                                </div>
-                                <span class="text-white-50" style="font-size:0.75rem">${Math.floor(b.remaining_seconds / 60)}m left</span>
+                                <span class="font-mono-data text-[11px] text-outline">${time}</span>
                             </div>
-                            <div class="text-white-50" style="font-size:0.8rem">${b.reason}</div>
-                        </div>`).join('');
-                    } else {
-                        bansDiv.innerHTML = '<div class="text-white-50 text-center py-3">No active bans</div>';
-                    }
-                });
-        }
+                            <div class="font-mono-data text-body-sm text-on-surface-variant mb-2">${a.details || ''}</div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    alertsDiv.innerHTML = '<div class="text-center text-outline py-4">No recent alerts</div>';
+                }
+            });
+    }
 
-        async function trainModel() {
-            showToast('Training MCD model...');
-            const r = await fetch('/api/defense/train', { method: 'POST' });
-            const d = await r.json();
-            if (r.ok) showToast(`Model trained on ${d.stats.n_samples} samples. Threshold: ${d.stats.threshold}`);
-            else showToast('Training failed: ' + (d.detail || 'error'));
-            loadDashboard();
-        }
-
-        async function scoreEvents() {
-            showToast('Scoring unscored events...');
-            const r = await fetch('/api/defense/score', { method: 'POST' });
-            const d = await r.json();
-            if (r.ok) showToast(`Scored ${d.scored} events. Found ${d.anomalies_found} anomalies.`);
-            else showToast('Scoring failed');
-            loadDashboard();
-        }
-
-        async function simulateNormal() {
-            const r = await fetch('/api/defense/simulate-login', { method: 'POST' });
-            const d = await r.json();
-            showToast(`Normal login: score ${d.anomaly_score || 'N/A'}`);
-            loadDashboard();
-        }
-
-        async function simulateAttack() {
-            const r = await fetch('/api/defense/simulate-login?is_attack=true', { method: 'POST' });
-            const d = await r.json();
-            showToast(`⚠ Attack login: score ${d.anomaly_score || 'N/A'} ${d.is_anomalous ? '— ANOMALOUS!' : ''}`);
-            loadDashboard();
-        }
-
+    async function trainModel() {
+        const r = await fetch('/api/defense/train', { method: 'POST' });
         loadDashboard();
-        setInterval(loadDashboard, 5000);
-    </script>
-</body>
-</html>
+    }
+
+    async function scoreEvents() {
+        const r = await fetch('/api/defense/score', { method: 'POST' });
+        loadDashboard();
+    }
+
+    async function simulateNormal() {
+        await fetch('/api/defense/simulate-login', { method: 'POST' });
+        loadDashboard();
+    }
+
+    async function simulateAttack() {
+        await fetch('/api/defense/simulate-login?is_attack=true', { method: 'POST' });
+        loadDashboard();
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 5000);
+</script>
+</body></html>
