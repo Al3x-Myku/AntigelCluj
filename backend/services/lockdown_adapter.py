@@ -417,6 +417,118 @@ class APIAdapter(LockdownAdapter):
             return None
 
 
+# ─── MongoDB Adapter ──────────────────────────────────────────
+class MongoDBAdapter(LockdownAdapter):
+    """Connect to an existing MongoDB user collection."""
+    def __init__(self):
+        self.uri = os.getenv("LOCKDOWN_MONGO_URI", "mongodb://localhost:27017/")
+        self.db_name = os.getenv("LOCKDOWN_MONGO_DB", "")
+        self.collection_name = os.getenv("LOCKDOWN_MONGO_COLLECTION", "users")
+        self.id_field = os.getenv("LOCKDOWN_MONGO_ID_FIELD", "_id")
+
+    def _get_collection(self):
+        import pymongo
+        client = pymongo.MongoClient(self.uri)
+        return client[self.db_name][self.collection_name]
+
+    def disable_account(self, account_id: str) -> bool:
+        try:
+            from bson.objectid import ObjectId
+            coll = self._get_collection()
+            query_id = ObjectId(account_id) if self.id_field == "_id" and len(account_id) == 24 else account_id
+            res = coll.update_one({self.id_field: query_id}, {"$set": {"is_active": False, "is_locked": True}})
+            return res.modified_count > 0
+        except Exception as e:
+            logger.error(f"MongoDB lockdown failed: {e}")
+            return False
+
+    def revoke_sessions(self, account_id: str) -> int:
+        return 0
+
+    def freeze_credentials(self, account_id: str) -> int:
+        return 0
+
+    def restore_account(self, account_id: str) -> bool:
+        try:
+            from bson.objectid import ObjectId
+            coll = self._get_collection()
+            query_id = ObjectId(account_id) if self.id_field == "_id" and len(account_id) == 24 else account_id
+            res = coll.update_one({self.id_field: query_id}, {"$set": {"is_active": True, "is_locked": False}})
+            return res.modified_count > 0
+        except Exception as e:
+            logger.error(f"MongoDB restore failed: {e}")
+            return False
+
+    def get_account_info(self, account_id: str) -> Optional[dict]:
+        try:
+            from bson.objectid import ObjectId
+            coll = self._get_collection()
+            query_id = ObjectId(account_id) if self.id_field == "_id" and len(account_id) == 24 else account_id
+            doc = coll.find_one({self.id_field: query_id})
+            if doc:
+                doc['_id'] = str(doc['_id'])
+            return doc
+        except Exception as e:
+            logger.error(f"MongoDB get_account failed: {e}")
+            return None
+
+
+# ─── Redis Adapter ────────────────────────────────────────────
+class RedisAdapter(LockdownAdapter):
+    """Integrate with systems where active user state is stored in Redis."""
+    def __init__(self):
+        self.url = os.getenv("LOCKDOWN_REDIS_URL", "redis://localhost:6379/1")
+        self.user_prefix = os.getenv("LOCKDOWN_REDIS_USER_PREFIX", "user:")
+        self.session_prefix = os.getenv("LOCKDOWN_REDIS_SESSION_PREFIX", "session:")
+
+    def _get_client(self):
+        import redis
+        return redis.from_url(self.url, decode_responses=True)
+
+    def disable_account(self, account_id: str) -> bool:
+        try:
+            r = self._get_client()
+            key = f"{self.user_prefix}{account_id}"
+            r.hset(key, "is_active", "0")
+            r.hset(key, "is_locked", "1")
+            return True
+        except Exception as e:
+            logger.error(f"Redis lockdown failed: {e}")
+            return False
+
+    def revoke_sessions(self, account_id: str) -> int:
+        try:
+            r = self._get_client()
+            keys = r.keys(f"{self.session_prefix}{account_id}:*")
+            if keys:
+                r.delete(*keys)
+            return len(keys)
+        except Exception as e:
+            logger.error(f"Redis session revoke failed: {e}")
+            return 0
+
+    def freeze_credentials(self, account_id: str) -> int:
+        return 0
+
+    def restore_account(self, account_id: str) -> bool:
+        try:
+            r = self._get_client()
+            r.hset(f"{self.user_prefix}{account_id}", mapping={"is_active": "1", "is_locked": "0"})
+            return True
+        except Exception as e:
+            logger.error(f"Redis restore failed: {e}")
+            return False
+
+    def get_account_info(self, account_id: str) -> Optional[dict]:
+        try:
+            r = self._get_client()
+            info = r.hgetall(f"{self.user_prefix}{account_id}")
+            return info if info else None
+        except Exception as e:
+            logger.error(f"Redis get_account failed: {e}")
+            return None
+
+
 # ─── Factory ─────────────────────────────────────────────────
 ADAPTER_MAP = {
     "sqlite": "SQLiteAdapter",
@@ -424,13 +536,15 @@ ADAPTER_MAP = {
     "mysql": "MySQLAdapter",
     "ldap": "LDAPAdapter",
     "api": "APIAdapter",
+    "mongodb": "MongoDBAdapter",
+    "redis": "RedisAdapter",
 }
 
 
 def get_adapter(db_session=None) -> LockdownAdapter:
     """Get the configured lockdown adapter based on LOCKDOWN_BACKEND env var.
 
-    LOCKDOWN_BACKEND=sqlite (default) | postgresql | mysql | ldap | api
+    LOCKDOWN_BACKEND=sqlite (default) | postgresql | mysql | ldap | api | mongodb | redis
     """
     backend = os.getenv("LOCKDOWN_BACKEND", "sqlite").lower()
 
@@ -447,6 +561,10 @@ def get_adapter(db_session=None) -> LockdownAdapter:
         return LDAPAdapter()
     elif backend == "api":
         return APIAdapter()
+    elif backend == "mongodb":
+        return MongoDBAdapter()
+    elif backend == "redis":
+        return RedisAdapter()
     else:
         logger.warning(f"Unknown lockdown backend '{backend}', falling back to SQLite")
         if db_session is None:
