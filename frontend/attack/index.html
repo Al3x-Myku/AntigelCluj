@@ -1,166 +1,303 @@
+<!-- Red Team: Attack Dashboard (Simple) -->
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard — Attack Dashboard</title>
-    <meta name="description" content="PhishGuard Red Team Campaign Dashboard — manage and monitor phishing simulation campaigns.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
-        body { background: #0b1120; color: #e2e8f0; min-height: 100vh; }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 16px;
-            padding: 1.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhishGuard - Red Team Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#472a00",
+                        "secondary-container": "#00a572",
+                        "surface-container-high": "#222a3d",
+                        "surface-bright": "#31394d",
+                        "outline-variant": "#3d494c",
+                        "outline": "#869397",
+                        "on-secondary-container": "#00311f",
+                        "primary-container": "#06b6d4",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "secondary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#e79400",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#2a1700",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb95f",
+                        "surface": "#0b1326",
+                        "surface-container": "#171f33",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "primary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#0b1326",
+                        "on-secondary": "#003824",
+                        "surface-container-low": "#131b2e",
+                        "surface-dim": "#0b1326",
+                        "on-tertiary-container": "#563400",
+                        "on-background": "#dae2fd",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00424f",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "on-surface-variant": "#bcc9cd",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-primary": "#00687a",
+                        "primary-fixed": "#acedff",
+                        "secondary": "#4edea3",
+                        "surface-tint": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2d3449"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "margin": "2rem",
+                        "base": "4px",
+                        "lg": "1.5rem",
+                        "gutter": "1.25rem",
+                        "sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "h1": ["Inter"],
+                        "h2": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
         }
-        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
-        .stat-number { font-size: 2.2rem; font-weight: 800; line-height: 1; }
-        .stat-label { font-size: 0.78rem; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-        .gradient-red { background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-blue { background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-green { background: linear-gradient(135deg, #10b981, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .btn-glow {
-            background: linear-gradient(135deg, #ef4444, #f97316);
-            border: none; border-radius: 12px; padding: 0.7rem 1.5rem;
-            font-weight: 600; color: #fff; transition: all 0.3s;
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        .btn-glow:hover { box-shadow: 0 0 30px rgba(239,68,68,0.4); transform: translateY(-1px); color: #fff; }
-        .table-dark-custom { background: transparent; }
-        .table-dark-custom th { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.06); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); }
-        .table-dark-custom td { border-color: rgba(255,255,255,0.04); vertical-align: middle; }
-        .table-dark-custom tbody tr:hover { background: rgba(255,255,255,0.03); }
-        .page-header { padding: 2rem 0 1rem; }
-        .page-header h1 { font-size: 1.8rem; font-weight: 800; }
-        #nav-placeholder { position: sticky; top: 0; z-index: 1050; }
-        .pulse { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
-<body>
-    <div id="nav-placeholder"></div>
-
-    <div class="container-fluid px-4">
-        <!-- Header -->
-        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-            <div>
-                <h1><span class="gradient-red">⚔ Attack Dashboard</span></h1>
-                <p class="text-white-50 mb-0">Red Team Campaign Management & Metrics</p>
-            </div>
-            <a href="/attack/campaign/create" class="btn btn-glow">
-                <span class="me-1">+</span> New Campaign
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row">
+<!-- TopNavBar (Mobile Only) -->
+<header class="md:hidden bg-slate-950 flex-col border-b border-slate-800 text-cyan-500 font-inter antialiased text-sm fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-4 w-full">
+<a href="/"><span class="text-xl font-bold tracking-tighter text-cyan-500">PhishGuard</span></a>
+<div class="flex-1 flex justify-center">
+<nav class="flex gap-6">
+<a class="text-cyan-500 font-semibold border-b-2 border-cyan-500 pb-1 cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200" href="/attack/">Red Team</a>
+<a class="text-slate-400 font-medium hover:text-slate-200 cursor-pointer active:scale-95 hover:bg-slate-900 transition-colors duration-200 pb-1" href="/defense/">Blue Team</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined cursor-pointer text-slate-400 hover:text-slate-200">notifications</span>
+<span class="material-symbols-outlined cursor-pointer text-slate-400 hover:text-slate-200">settings</span>
+<img alt="Security Analyst" class="w-8 h-8 rounded-full border border-slate-800" data-alt="Portrait of a female security analyst in a modern office, sharp focus, professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtqA95QAJ63D_6bV3hr66wOIRJvBctJ2vU4_NIzll2cBFjEulI1aQNvlVuFO5_GSGHxIsW6r75Qr1MFIX2uOJ3fNQ3vBd5-8dD50ZRXouPy1tkQwVGfKPQ37oQ6c-HXEz8zT8ooAFDS9sQP-DOfnBqNywoonrHxE3MpKUPk0ZlinXnLyFfjbyoWsVhTxL30ZI9ac_O5_jOFUe_cHlkHS7_UgqyFwehzpEFtsz2bnFXkcq2_bHgwcQ5lIbmukjiek44Qy_TbNlDjlP3"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Web Only) -->
+<aside class="hidden md:flex bg-slate-950 text-cyan-500 font-inter text-xs uppercase tracking-widest font-semibold docked h-full w-64 left-0 border-r border-r border-slate-800 flat no shadows fixed left-0 top-0 bottom-0 flex-col py-4 z-40">
+<div class="px-6 mb-8 mt-4 flex items-center gap-4 cursor-pointer" onclick="window.location.href='/'">
+<img alt="System Administrator" class="w-10 h-10 rounded-full border border-slate-800" data-alt="Portrait of a male system administrator, serious expression, dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMGSk4iCyvlW9edbjZ6OZXKQYqnIfnD_9sIxtZD_AyOx8p0PmJLKnf2wsgyGc6Hp6WGYE9SbiLq8rzKWMiXrWmGgDDF3O6AkTq8wfz981Wj4RWd8bsdSwKvrVwk-l5gJDn4qF1cqXEVP8rNrXaMIYOPltbh5We92FmQyNIyWI7lwoAa1tvKz50wn2jrnc7VN-Z4QCPTFPSVWR8cz54Hu_xdRaV4v-PXhsj1BajwbahPuX8jAU5Mm497BEgLo1W83KOPbdpJpFVa_ar"/>
+<div>
+<div class="text-slate-200 font-bold capitalize text-sm">Operations</div>
+<div class="text-slate-500 text-xs">Global Intel</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="bg-slate-900 text-cyan-400 border-l-2 border-cyan-500 px-4 py-3 flex items-center gap-3 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/attack/">
+<span class="material-symbols-outlined">dashboard</span>
+                Overview
             </a>
-        </div>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/defense/">
+<span class="material-symbols-outlined">security</span>
+                Blue Team
+            </a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 border-t border-slate-800 pt-4">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 pt-16 md:pt-0 p-6 md:p-8 bg-surface-dim min-h-screen">
+<div class="max-w-7xl mx-auto space-y-6">
+<header class="flex justify-between items-end pb-4 border-b border-surface-container-highest">
+<div>
+<h1 class="font-h1 text-h1 text-on-surface">Red Team Attack Dashboard</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Active Simulation Metrics</p>
+</div>
+<div class="hidden sm:flex gap-3">
+<button class="bg-surface-container-highest border border-outline-variant text-on-surface px-4 py-2 rounded font-label-caps text-label-caps hover:bg-surface-bright transition-colors">
+                        Export Report
+                    </button>
+<button class="bg-primary text-on-primary px-4 py-2 rounded font-label-caps text-label-caps hover:bg-primary-fixed transition-colors" onclick="window.location.href='/attack/campaign/create'">
+                        New Campaign
+                    </button>
+</div>
+</header>
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Total Campaigns</span>
+<span class="material-symbols-outlined text-outline">target</span>
+</div>
+<div class="font-h1 text-h1 text-on-surface" id="statTotal">0</div>
+<div class="mt-2 text-secondary font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> Live updating
+                    </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Running</span>
+<span class="material-symbols-outlined text-outline">bolt</span>
+</div>
+<div class="font-h1 text-h1 text-on-surface" id="statRunning">0</div>
+<div class="mt-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span> Active across 3 regions
+                    </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Total Targets</span>
+<span class="material-symbols-outlined text-outline">group</span>
+</div>
+<div class="font-h1 text-h1 text-on-surface" id="statTargets">0</div>
+<div class="mt-2 text-secondary font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> Targets
+                    </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-4 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Total Clicked</span>
+<span class="material-symbols-outlined text-outline">touch_app</span>
+</div>
+<div class="font-h1 text-h1 text-on-surface" id="statClicked">0</div>
+<div class="mt-2 text-error font-body-sm text-body-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> Clicked
+                    </div>
+</div>
+</div>
+<!-- Active Campaigns Table -->
+<div class="bg-surface border border-outline-variant rounded-DEFAULT overflow-hidden">
+<div class="p-4 border-b border-surface-container-highest flex justify-between items-center">
+<h2 class="font-h2 text-h2 text-on-surface">Active Campaigns</h2>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant text-[18px]">search</span>
+<input class="bg-surface-container border border-outline-variant rounded text-on-surface font-body-sm text-body-sm pl-9 pr-3 py-1.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none w-64" placeholder="Search campaigns..." type="text"/>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-surface-container-highest">
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Campaign Name</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Status</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Channels</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Targets</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Sent</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Clicked</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap">Submitted</th>
+<th class="p-4 font-label-caps text-label-caps text-on-surface-variant whitespace-nowrap text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface" id="campaignBody">
+<tr><td colspan="9" class="text-center text-white-50 py-4">Loading campaigns...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+<script>
+    function statusBadge(status) {
+        const colors = {
+            draft: 'outline',
+            running: 'secondary',
+            queued: 'primary',
+            completed: 'primary',
+            failed: 'error'
+        };
+        const color = colors[status] || 'outline';
+        return `<span class="inline-flex items-center px-2 py-0.5 rounded border border-${color} text-${color} bg-${color}/10 font-label-caps text-label-caps">${status}</span>`;
+    }
 
-        <!-- Global Stats -->
-        <div class="row g-3 mb-4" id="globalStats">
-            <div class="col-6 col-md-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number gradient-blue" id="statTotal">0</div>
-                    <div class="stat-label">Total Campaigns</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number gradient-green" id="statRunning">0</div>
-                    <div class="stat-label">Running</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number gradient-red" id="statTargets">0</div>
-                    <div class="stat-label">Total Targets</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="glass-card text-center">
-                    <div class="stat-number" style="color: #f59e0b;" id="statClicked">0</div>
-                    <div class="stat-label">Total Clicked</div>
-                </div>
-            </div>
-        </div>
+    function loadCampaigns() {
+        fetch('/api/attack/campaigns')
+            .then(r => r.json())
+            .then(data => {
+                const campaigns = data.campaigns || [];
+                const body = document.getElementById('campaignBody');
 
-        <!-- Campaign Table -->
-        <div class="glass-card">
-            <h5 class="mb-3 fw-700">All Campaigns</h5>
-            <div class="table-responsive">
-                <table class="table table-dark-custom mb-0" id="campaignTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Status</th>
-                            <th>Channels</th>
-                            <th>Targets</th>
-                            <th>Sent</th>
-                            <th>Clicked</th>
-                            <th>Submitted</th>
-                            <th>Created</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="campaignBody">
-                        <tr><td colspan="9" class="text-center text-white-50 py-4">Loading campaigns...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+                // Update global stats
+                document.getElementById('statTotal').textContent = campaigns.length;
+                document.getElementById('statRunning').textContent = campaigns.filter(c => c.status === 'running' || c.status === 'queued').length;
+                document.getElementById('statTargets').textContent = campaigns.reduce((s, c) => s + (c.stats?.total_targets || 0), 0);
+                document.getElementById('statClicked').textContent = campaigns.reduce((s, c) => s + (c.stats?.total_clicked || 0), 0);
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/shared/charts.js"></script>
-    <script>
-        // Load navbar
-        fetch('/static/shared/nav.html').then(r => r.text()).then(html => {
-            document.getElementById('nav-placeholder').innerHTML = html;
-        });
+                if (campaigns.length === 0) {
+                    body.innerHTML = '<tr><td colspan="9" class="text-center text-outline py-5">No campaigns yet. <a href="/attack/campaign/create" class="text-primary">Create one →</a></td></tr>';
+                    return;
+                }
 
-        function loadCampaigns() {
-            fetch('/api/attack/campaigns')
-                .then(r => r.json())
-                .then(data => {
-                    const campaigns = data.campaigns || [];
-                    const body = document.getElementById('campaignBody');
+                body.innerHTML = campaigns.map(c => {
+                    const channels = Object.entries(c.channels || {}).filter(([k, v]) => v).map(([k]) => k);
+                    const channelBadges = channels.map(ch => `<span class="bg-surface-container-highest px-1 rounded mr-1">${ch}</span>`).join('');
+                    return `<tr class="border-b border-surface-container-highest hover:bg-surface-container-lowest transition-colors cursor-pointer" onclick="window.location='/attack/campaign/${c.id}'">
+                        <td class="p-4 font-mono-data text-mono-data">${c.name}</td>
+                        <td class="p-4">${statusBadge(c.status)}</td>
+                        <td class="p-4">${channelBadges}</td>
+                        <td class="p-4">${c.stats?.total_targets || 0}</td>
+                        <td class="p-4">${c.stats?.total_sent || 0}</td>
+                        <td class="p-4 text-tertiary">${c.stats?.total_clicked || 0}</td>
+                        <td class="p-4 text-error">${c.stats?.total_submitted || 0}</td>
+                        <td class="p-4 text-right">
+                            <button class="text-outline hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            })
+            .catch(err => {
+                document.getElementById('campaignBody').innerHTML = '<tr><td colspan="9" class="text-center text-error py-4">Error loading campaigns</td></tr>';
+            });
+    }
 
-                    // Update global stats
-                    document.getElementById('statTotal').textContent = campaigns.length;
-                    document.getElementById('statRunning').textContent = campaigns.filter(c => c.status === 'running' || c.status === 'queued').length;
-                    document.getElementById('statTargets').textContent = campaigns.reduce((s, c) => s + (c.stats?.total_targets || 0), 0);
-                    document.getElementById('statClicked').textContent = campaigns.reduce((s, c) => s + (c.stats?.total_clicked || 0), 0);
-
-                    if (campaigns.length === 0) {
-                        body.innerHTML = '<tr><td colspan="9" class="text-center text-white-50 py-5">No campaigns yet. <a href="/attack/campaign/create" class="text-primary">Create one →</a></td></tr>';
-                        return;
-                    }
-
-                    body.innerHTML = campaigns.map(c => {
-                        const channels = Object.entries(c.channels || {}).filter(([k, v]) => v).map(([k]) => k);
-                        const channelBadges = channels.map(ch => `<span class="badge bg-secondary bg-opacity-50 me-1">${ch}</span>`).join('');
-                        const created = c.created_at ? new Date(c.created_at).toLocaleDateString() : '-';
-                        return `<tr style="cursor:pointer" onclick="window.location='/attack/campaign/${c.id}'">
-                            <td class="fw-600">${c.name}</td>
-                            <td>${statusBadge(c.status)}</td>
-                            <td>${channelBadges}</td>
-                            <td>${c.stats?.total_targets || 0}</td>
-                            <td>${c.stats?.total_sent || 0}</td>
-                            <td><span class="text-warning">${c.stats?.total_clicked || 0}</span></td>
-                            <td><span class="text-danger">${c.stats?.total_submitted || 0}</span></td>
-                            <td class="text-white-50">${created}</td>
-                            <td><a href="/attack/campaign/${c.id}" class="btn btn-sm btn-outline-light">View →</a></td>
-                        </tr>`;
-                    }).join('');
-                })
-                .catch(err => {
-                    document.getElementById('campaignBody').innerHTML = '<tr><td colspan="9" class="text-center text-danger py-4">Error loading campaigns</td></tr>';
-                });
-        }
-
-        loadCampaigns();
-        setInterval(loadCampaigns, 5000);
-    </script>
-</body>
-</html>
+    loadCampaigns();
+    setInterval(loadCampaigns, 5000);
+</script>
+</body></html>

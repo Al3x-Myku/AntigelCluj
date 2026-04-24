@@ -1,0 +1,195 @@
+<!-- PhishGuard: Command Center Selection -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhishGuard Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#06b6d4",
+                        "inverse-surface": "#dae2fd",
+                        "outline": "#869397",
+                        "on-secondary-container": "#00311f",
+                        "on-surface": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-tertiary": "#472a00",
+                        "secondary-container": "#00a572",
+                        "surface-bright": "#31394d",
+                        "outline-variant": "#3d494c",
+                        "surface-container-high": "#222a3d",
+                        "tertiary": "#ffb95f",
+                        "surface-container": "#171f33",
+                        "surface": "#0b1326",
+                        "secondary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#2a1700",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "on-primary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "primary": "#4cd7f6",
+                        "surface-variant": "#2d3449",
+                        "tertiary-container": "#e79400",
+                        "tertiary-fixed": "#ffddb8",
+                        "secondary-fixed-dim": "#4edea3",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "on-primary-container": "#00424f",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#0b1326",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "surface-container-low": "#131b2e",
+                        "surface-dim": "#0b1326",
+                        "on-tertiary-container": "#563400",
+                        "on-background": "#dae2fd",
+                        "on-secondary": "#003824",
+                        "secondary": "#4edea3",
+                        "primary-fixed": "#acedff",
+                        "inverse-primary": "#00687a",
+                        "surface-container-highest": "#2d3449",
+                        "surface-tint": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "on-secondary-fixed": "#002113",
+                        "inverse-on-surface": "#283044",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "on-surface-variant": "#bcc9cd",
+                        "on-secondary-fixed-variant": "#005236"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "2rem",
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "lg": "1.5rem",
+                        "gutter": "1.25rem",
+                        "base": "4px",
+                        "sm": "0.5rem",
+                        "margin": "2rem"
+                    },
+                    "fontFamily": {
+                        "h2": ["Inter"],
+                        "h1": ["Inter"],
+                        "mono-data": ["monospace"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar (Shared Component) -->
+<header class="flex justify-between items-center w-full px-6 py-3 h-14 bg-slate-950 font-inter antialiased tracking-tight text-sm docked full-width top-0 border-b border-slate-800 flat no-shadows z-50">
+<div class="flex items-center gap-md">
+<span class="text-lg font-bold tracking-tighter text-cyan-500 uppercase">PhishGuard</span>
+</div>
+<div class="hidden">
+<!-- search_bar hidden as per JSON -->
+</div>
+<nav class="hidden md:flex items-center gap-md h-full">
+<!-- Intent: Command Center landing page, doesn't directly map to nav items, but "Portal" is the best fit for an entry point -->
+<a class="text-cyan-500 border-b-2 border-cyan-500 pb-1 h-full flex items-center hover:bg-slate-900 duration-200 ease-in-out px-sm" href="#">Portal</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors h-full flex items-center hover:bg-slate-900 duration-200 ease-in-out px-sm" href="#">Activity</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors h-full flex items-center hover:bg-slate-900 duration-200 ease-in-out px-sm" href="#">Intelligence</a>
+<a class="text-slate-400 hover:text-slate-100 transition-colors h-full flex items-center hover:bg-slate-900 duration-200 ease-in-out px-sm" href="#">Nodes</a>
+</nav>
+<div class="flex items-center gap-sm">
+<button aria-label="notifications" class="p-xs text-cyan-500 hover:bg-slate-900 duration-200 ease-in-out rounded-DEFAULT">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button aria-label="settings" class="p-xs text-cyan-500 hover:bg-slate-900 duration-200 ease-in-out rounded-DEFAULT">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button aria-label="help_outline" class="p-xs text-cyan-500 hover:bg-slate-900 duration-200 ease-in-out rounded-DEFAULT">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<div class="ml-sm w-8 h-8 rounded-full bg-surface-container border border-outline-variant overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="professional headshot of a person looking forward against a neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_9TvHX5eYMS7tnMJIItXrRhr4LLea5g93kxVliOWmT7WvU2DsNdydTHf_AMOMaH5PqVzVX01rbkxUQF9JC9XFg71KEAflUhPPZe88hcDBkRWadA1IRVELqvweiveR7cf5nNQW4k7kJl8FM1_FqlqTZ9SgxNPJE7jyIRxb9qw6o9VRoAy5ieq1nRKj-KarDMGPAiCeg3exLB_iuc0pNRIFeNaz1GEPisM6qGd8lZSpAmGjnwPgaitAkV897qmxBKpSCTAi0BmXe9D9"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center p-margin w-full max-w-7xl mx-auto">
+<div class="mb-xl text-center">
+<h1 class="font-h1 text-h1 text-on-surface mb-xs">Command Center</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Select operational environment.</p>
+</div>
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-lg max-w-5xl">
+<!-- RED TEAM Card -->
+<div class="group relative flex flex-col bg-[#0f172a] border border-[#1e293b] rounded-lg overflow-hidden transition-colors duration-300 hover:border-error">
+<!-- Subtle Top Accent Border -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-error opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-sm mb-md pb-sm border-b border-[#1e293b]">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">target</span>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">RED TEAM OPERATIONS</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">
+                        Execute and manage simulated phishing campaigns. Deploy adversarial tactics to test defensive readiness.
+                    </p>
+<button class="w-full flex items-center justify-center gap-xs px-md py-sm bg-surface-container border border-outline-variant text-on-surface font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container-high hover:border-error transition-colors duration-200 uppercase" onclick="window.location.href='/attack/'">
+<span>ENTER DASHBOARD</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- BLUE TEAM Card -->
+<div class="group relative flex flex-col bg-[#0f172a] border border-[#1e293b] rounded-lg overflow-hidden transition-colors duration-300 hover:border-primary">
+<!-- Subtle Top Accent Border -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-primary opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-sm mb-md pb-sm border-b border-[#1e293b]">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">BLUE TEAM DEFENSE</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">
+                        Monitor real-time threats and manage incident response. Analyze defensive telemetry and system health.
+                    </p>
+<button class="w-full flex items-center justify-center gap-xs px-md py-sm bg-surface-container border border-outline-variant text-on-surface font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container-high hover:border-primary transition-colors duration-200 uppercase" onclick="window.location.href='/defense/'">
+<span>ENTER DASHBOARD</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="flex justify-between items-center w-full px-8 py-4 mt-auto bg-slate-950 font-inter text-[10px] tracking-widest uppercase docked full-width bottom-0 border-t border-slate-800 flat no-shadows text-slate-500">
+<div>
+<span>© 2024 PHISHGUARD SECURE SYSTEMS. INTERNAL USE ONLY.</span>
+</div>
+<div class="flex gap-lg">
+<a class="text-slate-600 hover:text-slate-400 hover:underline cursor-pointer" href="#">Documentation</a>
+<a class="text-slate-600 hover:text-slate-400 hover:underline cursor-pointer" href="#">System Status</a>
+<a class="text-slate-600 hover:text-slate-400 hover:underline cursor-pointer" href="#">Privacy Protocol</a>
+</div>
+</footer>
+</body></html>

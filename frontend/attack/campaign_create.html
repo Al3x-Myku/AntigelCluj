@@ -1,297 +1,309 @@
+<!-- Red Team: Create Campaign (Simple) -->
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhishGuard — Create Campaign</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
-        body { background: #0b1120; color: #e2e8f0; min-height: 100vh; }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 2rem;
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PhishGuard - Red Team Campaign</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#472a00",
+                        "secondary-container": "#00a572",
+                        "surface-container-high": "#222a3d",
+                        "surface-bright": "#31394d",
+                        "outline-variant": "#3d494c",
+                        "outline": "#869397",
+                        "on-secondary-container": "#00311f",
+                        "primary-container": "#06b6d4",
+                        "inverse-surface": "#dae2fd",
+                        "surface-container-lowest": "#060e20",
+                        "on-surface": "#dae2fd",
+                        "surface-variant": "#2d3449",
+                        "secondary-fixed-dim": "#4edea3",
+                        "tertiary-container": "#e79400",
+                        "tertiary-fixed": "#ffddb8",
+                        "on-primary": "#003640",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed": "#2a1700",
+                        "secondary-fixed": "#6ffbbe",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffb95f",
+                        "surface": "#0b1326",
+                        "surface-container": "#171f33",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "primary": "#4cd7f6",
+                        "tertiary-fixed-dim": "#ffb95f",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#0b1326",
+                        "on-secondary": "#003824",
+                        "surface-container-low": "#131b2e",
+                        "surface-dim": "#0b1326",
+                        "on-tertiary-container": "#563400",
+                        "on-background": "#dae2fd",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#00424f",
+                        "on-error": "#690005",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed": "#002113",
+                        "primary-fixed-dim": "#4cd7f6",
+                        "on-surface-variant": "#bcc9cd",
+                        "on-secondary-fixed-variant": "#005236",
+                        "inverse-primary": "#00687a",
+                        "primary-fixed": "#acedff",
+                        "secondary": "#4edea3",
+                        "surface-tint": "#4cd7f6",
+                        "on-tertiary-fixed-variant": "#653e00",
+                        "surface-container-highest": "#2d3449"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "0.25rem",
+                        "md": "1rem",
+                        "xl": "2rem",
+                        "margin": "2rem",
+                        "base": "4px",
+                        "lg": "1.5rem",
+                        "gutter": "1.25rem",
+                        "sm": "0.5rem"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter", "sans-serif"],
+                        "label-caps": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "mono-data": ["monospace"],
+                        "h1": ["Inter", "sans-serif"],
+                        "h2": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "label-caps": ["11px", { "lineHeight": "12px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "h2": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
         }
-        .form-control, .form-select {
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-            color: #e2e8f0; border-radius: 10px; padding: 0.7rem 1rem;
-        }
-        .form-control:focus, .form-select:focus {
-            background: rgba(255,255,255,0.08); border-color: #3b82f6;
-            color: #e2e8f0; box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-        }
-        .form-control::placeholder { color: rgba(255,255,255,0.3); }
-        textarea.form-control { font-family: 'Courier New', monospace; font-size: 0.9rem; }
-        .form-label { font-weight: 600; font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-launch {
-            background: linear-gradient(135deg, #ef4444, #f97316); border: none;
-            border-radius: 12px; padding: 0.8rem 2rem; font-weight: 700; font-size: 1rem;
-            color: #fff; transition: all 0.3s;
-        }
-        .btn-launch:hover { box-shadow: 0 0 35px rgba(239,68,68,0.4); transform: translateY(-2px); color: #fff; }
-        .channel-toggle { cursor: pointer; transition: all 0.3s; }
-        .channel-toggle input:checked + .channel-label {
-            background: rgba(59, 130, 246, 0.2); border-color: #3b82f6;
-        }
-        .channel-label {
-            display: flex; align-items: center; gap: 8px; padding: 0.7rem 1.2rem;
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;
-            font-weight: 500; transition: all 0.2s; cursor: pointer;
-        }
-        .channel-label:hover { border-color: rgba(255,255,255,0.2); }
-        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        #nav-placeholder { position: sticky; top: 0; z-index: 1050; }
-        .template-hint { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
-        .alert-status { display: none; }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body>
-    <div id="nav-placeholder"></div>
-
-    <div class="container py-4" style="max-width: 900px;">
-        <div class="mb-4">
-            <a href="/attack/" class="text-white-50 text-decoration-none">← Back to Dashboard</a>
-            <h2 class="mt-2 fw-800">Create Phishing Campaign</h2>
-        </div>
-
-        <div class="alert alert-success alert-status" id="successAlert" role="alert"></div>
-        <div class="alert alert-danger alert-status" id="errorAlert" role="alert"></div>
-
-        <form id="campaignForm" enctype="multipart/form-data">
-            <!-- Campaign Name -->
-            <div class="glass-card mb-4">
-                <div class="section-title">📋 Campaign Details</div>
-                <div class="mb-3">
-                    <label class="form-label">Campaign Name</label>
-                    <input type="text" name="name" class="form-control" placeholder="e.g., Q1 Security Awareness Test" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Schedule (optional)</label>
-                    <input type="datetime-local" name="schedule_at" class="form-control">
-                </div>
+<body class="bg-background text-on-background min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-slate-950 border-b border-slate-800 flat no shadows fixed top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-50">
+<div class="flex items-center gap-8">
+<div class="text-xl font-bold tracking-tighter text-cyan-500 flex items-center gap-2 cursor-pointer" onclick="window.location.href='/'">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shield</span>
+                PhishGuard
             </div>
+<nav class="hidden md:flex items-center gap-6 font-inter antialiased text-sm">
+<a class="text-cyan-500 font-semibold border-b-2 border-cyan-500 pb-1 cursor-pointer active:scale-95" href="/attack/">Red Team</a>
+<a class="text-slate-400 font-medium hover:text-slate-200 hover:bg-slate-900 transition-colors duration-200 cursor-pointer active:scale-95" href="/defense/">Blue Team</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-slate-400">
+<button class="hover:text-slate-200 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-DEFAULT cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-slate-200 hover:bg-slate-900 transition-colors duration-200 p-2 rounded-DEFAULT cursor-pointer active:scale-95">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container overflow-hidden border border-slate-800 ml-2">
+<img alt="Security Analyst" class="w-full h-full object-cover" data-alt="Close up portrait of a female security professional in a dimly lit server room with cool blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBv5pkQYdTGx0fF3P7OqpenJ0tOogQR4d-RW6pXL9uJjts79ijzA3MrXh4QTTOra7Fs7AyWZXLL3vn7jPLFfr39D3tprt4GFxLmijyaHILaODpfVD0ESRd0Prs-b5KVFar0vOCxqM55ZzRwxywtcAkqSfMzYwl8Rm7LJkgH-XfpQ9aCcqfZJ2qS_iyM24e71sWs-SNdsCNhIcSR9VpQJ8mGYrDpkeo1f94miL7qKb-vxcNJiJeAct1nguDk0vjU19Z_Qc_WNauaLNhq"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="bg-slate-950 border-r border-slate-800 flat no shadows fixed left-0 top-16 bottom-0 w-64 flex flex-col py-4 z-40 hidden md:flex">
+<div class="px-6 mb-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-DEFAULT bg-surface-container border border-slate-800 overflow-hidden">
+<img alt="System Administrator" class="w-full h-full object-cover" data-alt="Abstract macro shot of a dark metallic server chassis texture with subtle geometric lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABqDrdwnCr1LnCgH4F0S8HbpVqbAFoZ-Sc2Ruma58RQOYEXwO66RN4UWuHBVRuMAknVBrOvjxrzj83PtjR_nhJuMlu1SezqSOSTzC6uvdyEjEjqF4zuMRnCbvHwqLiHoE0n5cYjxlNUm2vNbmO4AwcXN75cTmfqnFseoV1eNYGmQIvBcvdtRs3QkpWysAK6Wj3SPsvMkC1wjwwqXTn9xjnIHQA9cN9yxETR-f4x-cnqcU1F27j5mRl2y0gxZKD8-jTZDjUCVPpuMbc"/>
+</div>
+<div>
+<div class="font-h2 text-h2 text-slate-200">Operations</div>
+<div class="font-body-sm text-body-sm text-slate-500">Global Intel</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col font-inter text-xs uppercase tracking-widest font-semibold">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="/attack/">
+<span class="material-symbols-outlined">dashboard</span>
+                Overview
+            </a>
+</nav>
+<div class="mt-auto flex flex-col font-inter text-xs uppercase tracking-widest font-semibold border-t border-slate-800 pt-4">
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<a class="text-slate-500 px-4 py-3 flex items-center gap-3 hover:text-slate-300 hover:bg-slate-900/50 transition-all duration-150 active:bg-slate-800" href="#">
+<span class="material-symbols-outlined">logout</span>
+                Sign Out
+            </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="md:ml-64 mt-16 p-lg md:p-xl max-w-5xl mx-auto">
+<div class="mb-lg">
+<a href="/attack/" class="text-outline hover:text-primary mb-2 inline-block">← Back to Dashboard</a>
+<h1 class="font-h1 text-h1 text-on-surface">Campaign Configuration</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Define vectors and target parameters for simulation.</p>
+</div>
 
-            <!-- Targets -->
-            <div class="glass-card mb-4">
-                <div class="section-title">🎯 Targets</div>
-                <div class="mb-3">
-                    <label class="form-label">Upload CSV File</label>
-                    <input type="file" name="targets_csv" class="form-control" accept=".csv">
-                    <div class="template-hint mt-2">
-                        CSV columns: <code>first_name, last_name, email</code>
-                        <br><a href="#" id="downloadTemplate" class="text-primary">Download template CSV →</a>
-                    </div>
-                </div>
-            </div>
+<div class="bg-error/10 text-error p-4 rounded mb-4" id="errorAlert" style="display:none"></div>
+<div class="bg-secondary/10 text-secondary p-4 rounded mb-4" id="successAlert" style="display:none"></div>
 
-            <!-- Channels -->
-            <div class="glass-card mb-4">
-                <div class="section-title">📡 Channels</div>
-                <div class="row g-2 mb-3">
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_email" value="1" id="chEmail" checked class="d-none">
-                            <label for="chEmail" class="channel-label">📧 Email</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_sms" value="1" id="chSms" class="d-none">
-                            <label for="chSms" class="channel-label">📱 SMS</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_whatsapp" value="1" id="chWhatsapp" class="d-none">
-                            <label for="chWhatsapp" class="channel-label">💬 WhatsApp</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_telegram" value="1" id="chTelegram" class="d-none">
-                            <label for="chTelegram" class="channel-label">✈️ Telegram</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_discord" value="1" id="chDiscord" class="d-none">
-                            <label for="chDiscord" class="channel-label">🎮 Discord</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_instagram" value="1" id="chInstagram" class="d-none">
-                            <label for="chInstagram" class="channel-label">📸 Instagram</label>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-4">
-                        <div class="channel-toggle">
-                            <input type="checkbox" name="use_calendar" value="1" id="chCalendar" class="d-none">
-                            <label for="chCalendar" class="channel-label">📅 Calendar Invite</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Message Templates -->
-            <div class="glass-card mb-4">
-                <div class="section-title">✉️ Message Templates</div>
-                <div class="template-hint mb-3">
-                    Variables: <code>{{name}}</code> <code>{{first_name}}</code> <code>{{email}}</code> <code>{{link}}</code> <code>{{bank}}</code> <code>{{company}}</code>
-                </div>
-
-                <!-- Email Template -->
-                <div id="emailTemplate">
-                    <div class="mb-3">
-                        <label class="form-label">📧 Email Subject</label>
-                        <input type="text" name="email_subject" class="form-control"
-                               value="⚠ Action Required: Verify Your {{bank}} Account">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">📧 Email Body (HTML)</label>
-                        <textarea name="email_body" class="form-control" rows="8">Dear {{name}},
-
-We have detected unusual activity on your {{bank}} account. For your security, please verify your identity immediately.
-
-<a href="{{link}}" style="display:inline-block;padding:12px 30px;background:#1565c0;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">Verify Account Now</a>
-
-If you did not request this verification, please contact our support team immediately.
-
-Best regards,
-{{bank}} Security Team</textarea>
-                    </div>
-                </div>
-
-                <!-- SMS Template -->
-                <div id="smsTemplate" style="display:none;">
-                    <div class="mb-3">
-                        <label class="form-label">📱 SMS Body</label>
-                        <textarea name="sms_body" class="form-control" rows="3">[{{bank}}] Urgent: Verify your account to avoid suspension. Click: {{link}}</textarea>
-                    </div>
-                </div>
-
-                <!-- Generic template for other channels -->
-                <div id="otherTemplates" style="display:none;">
-                    <div class="mb-3">
-                        <label class="form-label">💬 WhatsApp Body</label>
-                        <textarea name="whatsapp_body" class="form-control" rows="3">⚠️ {{bank}} Security Alert: Please verify your account: {{link}}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">✈️ Telegram Body</label>
-                        <textarea name="telegram_body" class="form-control" rows="3">🔒 Security Notice from {{bank}}: Verify your account → {{link}}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">🎮 Discord Body</label>
-                        <textarea name="discord_body" class="form-control" rows="3">@everyone ⚠️ {{bank}} requires verification: {{link}}</textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">📸 Instagram Body</label>
-                        <textarea name="instagram_body" class="form-control" rows="3">Important: Your {{bank}} account needs verification. Link in bio: {{link}}</textarea>
-                    </div>
-                </div>
-
-                <!-- Calendar Invite Template -->
-                <div id="calendarTemplate" style="display:none;">
-                    <div class="mb-3">
-                        <label class="form-label">📅 Meeting Title</label>
-                        <input type="text" name="calendar_summary" class="form-control"
-                               value="Mandatory: Annual Security Compliance Review">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">📅 Meeting Description</label>
-                        <textarea name="calendar_description" class="form-control" rows="3">Dear {{name}}, you are invited to a mandatory security compliance review. Please join using the link below. This meeting is required by company policy.
-
-Join: {{link}}</textarea>
-                    </div>
-                    <div class="template-hint">The phishing link ({{link}}) is automatically embedded in the calendar event. The invite auto-adds to Gmail/Outlook without user interaction.</div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center">
-                <a href="/attack/" class="btn btn-outline-secondary">Cancel</a>
-                <button type="submit" class="btn btn-launch" id="submitBtn">
-                    🚀 Create Campaign
+<form class="flex flex-col gap-lg" id="campaignForm">
+<!-- Campaign Identity -->
+<section class="bg-surface border border-outline-variant rounded-lg p-lg">
+<h2 class="font-h2 text-h2 text-on-surface mb-md pb-xs border-b border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">label</span>
+                    Identity
+                </h2>
+<div class="flex flex-col gap-2 max-w-xl">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="campaign-name">Campaign Name</label>
+<input name="name" class="bg-surface-container border border-outline-variant rounded-DEFAULT px-md py-sm text-on-surface font-body-md text-body-md focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full" id="campaign-name" placeholder="e.g. Q3 Finance Dept Phish" type="text" required/>
+</div>
+</section>
+<!-- Target Acquisition -->
+<section class="bg-surface border border-outline-variant rounded-lg p-lg">
+<h2 class="font-h2 text-h2 text-on-surface mb-md pb-xs border-b border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">group</span>
+                    Target Population
+                </h2>
+<div class="border border-dashed border-outline hover:border-primary bg-surface-container-lowest transition-colors p-xl rounded-DEFAULT flex flex-col items-center justify-center gap-sm cursor-pointer relative">
+<input type="file" name="targets_csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".csv" required>
+<span class="material-symbols-outlined text-3xl text-outline mb-2">upload_file</span>
+<span class="font-body-md text-body-md text-on-surface">Drag &amp; Drop target roster (CSV)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">or click to browse local files</span>
+</div>
+</section>
+<!-- Vector Selection -->
+<section class="bg-surface border border-outline-variant rounded-lg p-lg">
+<h2 class="font-h2 text-h2 text-on-surface mb-md pb-xs border-b border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">route</span>
+                    Delivery Vector
+                </h2>
+<div class="grid grid-cols-2 md:grid-cols-5 gap-md">
+<!-- Option: Email (Selected) -->
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="use_email" type="checkbox" value="1"/>
+<div class="border border-outline-variant bg-surface-container rounded-DEFAULT p-md flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary">mail</span>
+<span class="font-body-md text-body-md text-on-surface">Email</span>
+</div>
+</label>
+<!-- Option: SMS -->
+<label class="cursor-pointer">
+<input class="peer sr-only" name="use_sms" type="checkbox" value="1"/>
+<div class="border border-outline-variant bg-surface-container rounded-DEFAULT p-md flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary">sms</span>
+<span class="font-body-md text-body-md text-on-surface">SMS</span>
+</div>
+</label>
+<!-- Option: WhatsApp -->
+<label class="cursor-pointer">
+<input class="peer sr-only" name="use_whatsapp" type="checkbox" value="1"/>
+<div class="border border-outline-variant bg-surface-container rounded-DEFAULT p-md flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary">forum</span>
+<span class="font-body-md text-body-md text-on-surface">WhatsApp</span>
+</div>
+</label>
+<!-- Option: Telegram -->
+<label class="cursor-pointer">
+<input class="peer sr-only" name="use_telegram" type="checkbox" value="1"/>
+<div class="border border-outline-variant bg-surface-container rounded-DEFAULT p-md flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary">send</span>
+<span class="font-body-md text-body-md text-on-surface">Telegram</span>
+</div>
+</label>
+<!-- Option: Discord -->
+<label class="cursor-pointer">
+<input class="peer sr-only" name="use_discord" type="checkbox" value="1"/>
+<div class="border border-outline-variant bg-surface-container rounded-DEFAULT p-md flex flex-col items-center gap-2 peer-checked:border-primary peer-checked:bg-surface-container-high transition-all">
+<span class="material-symbols-outlined text-on-surface-variant peer-checked:text-primary">sports_esports</span>
+<span class="font-body-md text-body-md text-on-surface">Discord</span>
+</div>
+</label>
+</div>
+</section>
+<!-- Payload Template -->
+<section class="bg-surface border border-outline-variant rounded-lg p-lg">
+<div class="flex items-center justify-between mb-md pb-xs border-b border-outline-variant">
+<h2 class="font-h2 text-h2 text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-outline">code_blocks</span>
+                        Payload Template (Email)
+                    </h2>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant" for="email_subject">Subject</label>
+<input name="email_subject" class="bg-surface-container border border-outline-variant rounded-DEFAULT px-md py-sm text-on-surface font-body-md text-body-md focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full" value="Important Account Update" type="text" required/>
+<label class="font-label-caps text-label-caps text-on-surface-variant mt-2" for="email_body">Body HTML</label>
+<textarea name="email_body" class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-md font-mono-data text-mono-data text-on-surface focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full resize-y" id="template" placeholder="Enter raw payload or message body here..." rows="8">Hello {{name}}, please verify your account: <a href="{{link}}">Verify</a></textarea>
+<div class="flex justify-between items-center mt-1">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Supports {{name}}, {{company}}, {{link}} variables</span>
+</div>
+</div>
+</section>
+<!-- Actions -->
+<div class="pt-md flex justify-end">
+<button class="bg-primary hover:bg-primary-fixed text-on-primary font-h2 text-h2 py-sm px-xl rounded-DEFAULT flex items-center gap-2 transition-colors duration-200" type="submit" id="submitBtn">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+                    Create Campaign
                 </button>
-            </div>
-        </form>
-    </div>
+</div>
+</form>
+</main>
+<script>
+    document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Creating...';
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Load navbar
-        fetch('/static/shared/nav.html').then(r => r.text()).then(html => {
-            document.getElementById('nav-placeholder').innerHTML = html;
+        const formData = new FormData(e.target);
+
+        // Set checkbox values properly if they aren't included when unchecked
+        ['use_email','use_sms','use_whatsapp','use_telegram','use_discord','use_instagram','use_calendar'].forEach(name => {
+            if (!formData.has(name)) formData.set(name, '0');
+            else formData.set(name, '1');
         });
 
-        // Channel toggle styling
-        document.querySelectorAll('.channel-toggle input').forEach(cb => {
-            cb.addEventListener('change', () => {
-                const label = cb.nextElementSibling;
-                if (cb.checked) {
-                    label.style.background = 'rgba(59,130,246,0.15)';
-                    label.style.borderColor = '#3b82f6';
-                } else {
-                    label.style.background = '';
-                    label.style.borderColor = '';
-                }
-                // Show/hide templates
-                document.getElementById('smsTemplate').style.display =
-                    document.getElementById('chSms').checked ? 'block' : 'none';
-                const otherChecked = ['chWhatsapp','chTelegram','chDiscord','chInstagram'].some(
-                    id => document.getElementById(id).checked);
-                document.getElementById('otherTemplates').style.display = otherChecked ? 'block' : 'none';
-                document.getElementById('calendarTemplate').style.display =
-                    document.getElementById('chCalendar').checked ? 'block' : 'none';
-            });
-            // Init
-            if (cb.checked) cb.dispatchEvent(new Event('change'));
-        });
+        try {
+            const resp = await fetch('/api/attack/campaigns', { method: 'POST', body: formData });
+            const data = await resp.json();
 
-        // CSV template download
-        document.getElementById('downloadTemplate').addEventListener('click', (e) => {
-            e.preventDefault();
-            const csv = 'first_name,last_name,email\nJohn,Doe,john@example.com\nJane,Smith,jane@example.com\n';
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'targets_template.csv';
-            a.click();
-        });
-
-        // Form submission
-        document.getElementById('campaignForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Creating...';
-
-            const formData = new FormData(e.target);
-
-            // Set checkbox values properly
-            ['use_email','use_sms','use_whatsapp','use_telegram','use_discord','use_instagram','use_calendar'].forEach(name => {
-                if (!formData.has(name)) formData.set(name, '0');
-                else formData.set(name, '1');
-            });
-
-            try {
-                const resp = await fetch('/api/attack/campaigns', { method: 'POST', body: formData });
-                const data = await resp.json();
-
-                if (resp.ok) {
-                    document.getElementById('successAlert').textContent = `Campaign "${data.campaign.name}" created!`;
-                    document.getElementById('successAlert').style.display = 'block';
-                    setTimeout(() => window.location = `/attack/campaign/${data.campaign.id}`, 1000);
-                } else {
-                    throw new Error(data.detail || 'Failed to create campaign');
-                }
-            } catch (err) {
-                document.getElementById('errorAlert').textContent = err.message;
-                document.getElementById('errorAlert').style.display = 'block';
-                btn.disabled = false;
-                btn.textContent = '🚀 Create Campaign';
+            if (resp.ok) {
+                document.getElementById('successAlert').textContent = `Campaign "${data.campaign.name}" created!`;
+                document.getElementById('successAlert').style.display = 'block';
+                setTimeout(() => window.location = `/attack/campaign/${data.campaign.id}`, 1000);
+            } else {
+                throw new Error(data.detail || 'Failed to create campaign');
             }
-        });
-    </script>
-</body>
-</html>
+        } catch (err) {
+            document.getElementById('errorAlert').textContent = err.message;
+            document.getElementById('errorAlert').style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined">rocket_launch</span> Create Campaign';
+        }
+    });
+</script>
+</body></html>
