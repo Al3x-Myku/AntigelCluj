@@ -1,0 +1,188 @@
+Tech Stack
+Frontend: Plain HTML5 + Bootstrap 5 + Tailwind CSS (CDN). No frameworks. Vanilla JS only.
+Backend: Python (FastAPI) — chosen for speed of development, async support, and rich ecosystem for ML/data processing.
+Database: SQLite for dev (via SQLAlchemy), easily swappable to PostgreSQL.
+Message Queue: Redis + RQ (Redis Queue) for async campaign job processing.
+Anomaly Detection: scikit-learn (Mahalanobis distance via covariance matrix / Minimum Covariance Determinant), optionally fine-tuned ONNX models if GPU training is done.
+GPU Training (optional): PyTorch on NVIDIA RTX 5080 for training behavioral anomaly models offline; export to ONNX for inference.
+Email Simulation: smtplib + local Mailhog SMTP server (Docker). Open source: https://github.com/mailhog/MailHog
+SMS Simulation: Twilio SDK (or mock adapter for lab use).
+Messaging Channels (simulated): Webhook-based mock adapters for WhatsApp (via Twilio), Telegram Bot API, Discord Bot API, Instagram Basic Display API (or mock).
+Rate Limiting / Fail2Ban-style detection: Custom Python middleware tracking login attempts per IP/user, with configurable ban thresholds stored in Redis.
+Charts: Chart.js (CDN) for all dashboard metrics.
+
+Directory Structure
+phishguard/
+├── backend/
+│   ├── main.py                  # FastAPI app entrypoint
+│   ├── routers/
+│   │   ├── attack.py            # Campaign CRUD, launch, stats
+│   │   ├── defense.py           # Login monitoring, lockdown, anomaly
+│   │   └── accounts.py          # Victim account + resource management
+│   ├── services/
+│   │   ├── campaign_runner.py   # RQ job: sends phishing msgs per channel
+│   │   ├── anomaly_detector.py  # Mahalanobis distance engine
+│   │   ├── lockdown.py          # Resource freeze logic
+│   │   └── channels/
+│   │       ├── email_sender.py
+│   │       ├── sms_sender.py
+│   │       ├── telegram_sender.py
+│   │       ├── discord_sender.py
+│   │       └── instagram_sender.py
+│   ├── models/
+│   │   ├── campaign.py
+│   │   ├── target.py
+│   │   ├── login_event.py
+│   │   └── account.py
+│   └── ml/
+│       ├── train_anomaly.py     # Offline PyTorch trainer (GPU)
+│       └── infer_anomaly.py     # ONNX runtime inference
+├── frontend/
+│   ├── attack/
+│   │   ├── index.html           # Attack dashboard
+│   │   ├── campaign_create.html
+│   │   └── campaign_detail.html
+│   ├── defense/
+│   │   ├── index.html           # Defense console
+│   │   ├── login_monitor.html
+│   │   └── lockdown.html
+│   └── shared/
+│       ├── nav.html             # Shared navbar snippet
+│       └── charts.js            # Chart.js helpers
+├── docker-compose.yml           # Redis, Mailhog, app
+└── requirements.txt
+
+Component 1: Attack Dashboard (Red Team)
+Campaign Management
+
+Create phishing campaigns with: name, target list (CSV upload), message templates per channel, schedule.
+Channels: Email, SMS, WhatsApp, Telegram, Discord, Instagram (use real APIs or mock adapters).
+Templates support variable substitution: {{name}}, {{link}}, {{bank}}, etc.
+Campaigns run as async background jobs via Redis Queue.
+
+Metrics Dashboard
+All metrics are per campaign and displayed as live-updating Chart.js charts (polling /api/attack/stats/{campaign_id} every 3s).
+Key metrics to track and display:
+
+Success rate per 1,000 messages sent — per channel (email, SMS, WhatsApp, Telegram, Discord, Instagram)
+Click-through rate on phishing links (tracked via redirect logging)
+Credential submission rate (target submitted fake login form)
+Messages sent / failed / pending — live counters
+Timeline chart: messages sent over time per channel
+Heatmap: success rate by time of day (Chart.js matrix or bar)
+Funnel chart: Sent → Opened → Clicked → Submitted
+
+Use open source reference: GoPhish (https://github.com/gophish/gophish) for inspiration on campaign structure and metrics — but do NOT import it, rebuild relevant parts natively.
+Phishing Page Server
+
+FastAPI serves fake login pages (HTML templates) per campaign.
+On form submission: logs credential capture event, redirects victim to real site.
+Each link is unique per target (UUID token in URL for tracking).
+
+
+Component 2: Defense Console (Blue Team)
+Login Anomaly Detection
+Use Mahalanobis distance on a feature vector derived from each login event. Feature vector per login attempt:
+[hour_of_day, day_of_week, login_failures_last_hour,
+ ip_is_new (0/1), device_fingerprint_is_new (0/1),
+ geo_distance_from_usual_location_km,
+ time_since_last_login_hours, typing_speed_ms_avg]
+Implementation:
+
+Fit a Minimum Covariance Determinant (MCD) estimator on normal login history using sklearn.covariance.MinCovDet.
+Compute Mahalanobis distance for each new login. Threshold above chi2.ppf(0.975, df=n_features) is flagged as anomalous.
+Store model as pickle, retrain periodically via background job.
+Optionally: train a PyTorch autoencoder on GPU for richer behavioral embeddings, export to ONNX.
+
+Open source reference for Mahalanobis anomaly detection: https://github.com/lukasruff/Deep-SVDD-PyTorch (for GPU path), scikit-learn MCD for CPU path.
+Fail2Ban-Style Rate Limiting
+
+Track failed login attempts per IP and per username in Redis with sliding window (configurable: e.g., 5 failures in 60s = soft ban, 10 = hard ban).
+Soft ban: add CAPTCHA challenge.
+Hard ban: block IP, alert dashboard.
+Show live ban list in defense console with ban reason, timestamp, auto-expiry countdown.
+
+Reference: https://github.com/fail2ban/fail2ban — replicate core logic natively in Python/Redis, do not install fail2ban.
+Account Lockdown System
+When a breach is detected (anomaly score exceeds threshold OR manual trigger by operator):
+Trigger instant lockdown of all resources associated with the account:
+
+Revoke active sessions (delete session tokens from Redis/DB)
+Freeze linked cards (mock card service API — flip card.status = 'frozen' in DB)
+Revoke API/OAuth access tokens
+Suspend subscriptions (subscription.status = 'suspended')
+Disable account login
+Send lockdown alert (to admin email/Telegram bot)
+Log all actions with timestamp for audit trail
+
+The lockdown UI shows a per-account resource tree (account → cards, sessions, subscriptions, tokens) with live status badges. Operator can trigger lockdown manually or configure automatic trigger on anomaly threshold breach.
+Defense Dashboard Metrics
+
+Live feed of login events (WebSocket or polling) with anomaly score and color coding (green/yellow/red).
+Mahalanobis distance distribution chart (histogram, Chart.js).
+Banned IPs count, active sessions count, accounts in lockdown.
+Recent alerts timeline.
+
+
+Frontend Pages
+Attack side:
+
+/attack/ — Campaign list, global metrics summary, "New Campaign" button
+/attack/campaign/create — Form: name, targets CSV upload, channel toggles, message templates, schedule
+/attack/campaign/{id} — Live campaign dashboard with all metric charts
+
+Defense side:
+
+/defense/ — Overview: anomaly alerts, banned IPs, lockdown count
+/defense/monitor — Live login event feed with anomaly scores
+/defense/lockdown — Account resource lockdown manager
+
+Shared:
+
+Bootstrap 5 navbar with "Red Team / Blue Team" toggle
+Tailwind utility classes for spacing and color accents
+Dark-mode friendly (use Bootstrap dark theme + Tailwind dark: variants)
+
+
+API Endpoints (FastAPI)
+POST   /api/attack/campaigns          # Create campaign
+GET    /api/attack/campaigns          # List campaigns
+POST   /api/attack/campaigns/{id}/launch
+GET    /api/attack/stats/{id}         # Live metrics
+
+GET    /api/defense/events            # Recent login events
+GET    /api/defense/anomalies         # Flagged events
+POST   /api/defense/lockdown/{account_id}
+GET    /api/defense/lockdown/{account_id}/status
+GET    /api/defense/bans              # Current IP ban list
+
+POST   /api/phish/{token}/track       # Click tracking endpoint
+POST   /api/phish/{token}/submit      # Credential capture
+
+Docker Compose Services
+yamlservices:
+  app:       # FastAPI (uvicorn)
+  worker:    # RQ worker for campaign jobs
+  redis:     # Redis (campaigns queue + session bans)
+  mailhog:   # Local SMTP + Web UI at :8025
+
+GPU Training Path (Optional, offline)
+If behavioral data is available, train an LSTM autoencoder or Isolation Forest on labeled login sequences using PyTorch on the RTX 5080. Export the trained model to ONNX. The ml/infer_anomaly.py module loads the ONNX model via onnxruntime as a drop-in replacement for the scikit-learn MCD path, controlled by a config flag ANOMALY_ENGINE=onnx|sklearn.
+
+Key Open Source References to Check
+
+GoPhish: https://github.com/gophish/gophish (campaign/metrics patterns)
+Mailhog: https://github.com/mailhog/MailHog (local SMTP)
+scikit-learn MCD: https://scikit-learn.org/stable/modules/covariance.html#robust-covariance
+Redis Queue (RQ): https://python-rq.org/
+ONNX Runtime: https://onnxruntime.ai/
+
+
+Implementation Notes for the Agent
+
+Keep all phishing simulation strictly local — no real external targets. Use Mailhog and mock adapters.
+Use python-dotenv for config (SMTP host, API keys, thresholds).
+All HTML pages are standalone files — no bundler, no Node. Load Bootstrap 5 and Tailwind via CDN.
+Use fetch() + setInterval() for dashboard polling. WebSocket optional for the live login feed.
+Seed the DB with fake accounts, fake cards, fake sessions for demo purposes.
+Prioritize working end-to-end flow for the hackathon demo: create campaign → launch → see metrics update → trigger lockdown → see resources frozen.

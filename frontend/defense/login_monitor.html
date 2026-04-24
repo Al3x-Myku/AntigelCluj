@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard — Login Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        body { background: #0b1120; color: #e2e8f0; min-height: 100vh; }
+        .glass-card {
+            background: rgba(30,41,59,0.5); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 1.5rem;
+        }
+        .event-row {
+            display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem;
+            border-radius: 10px; margin-bottom: 4px; transition: background 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .event-row:hover { background: rgba(255,255,255,0.03); }
+        .event-row.normal { border-left-color: #10b981; }
+        .event-row.warning { border-left-color: #f59e0b; background: rgba(245,158,11,0.05); }
+        .event-row.critical { border-left-color: #ef4444; background: rgba(239,68,68,0.08); }
+        .score-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 65px; padding: 4px 10px; border-radius: 8px;
+            font-weight: 700; font-size: 0.85rem;
+        }
+        .score-green { background: rgba(16,185,129,0.15); color: #10b981; }
+        .score-yellow { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .score-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .event-meta { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+        .event-user { font-weight: 600; min-width: 110px; }
+        .event-ip { font-family: 'Courier New', monospace; font-size: 0.85rem; min-width: 130px; color: rgba(255,255,255,0.6); }
+        .event-geo { font-size: 0.8rem; min-width: 120px; }
+        .event-time { font-size: 0.8rem; color: rgba(255,255,255,0.5); min-width: 80px; }
+        .live-header { display: flex; align-items: center; gap: 8px; }
+        .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: blink 1.5s infinite; }
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+        .filter-pill {
+            padding: 0.4rem 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            background: transparent; color: rgba(255,255,255,0.6); cursor: pointer;
+            font-size: 0.8rem; font-weight: 500; transition: all 0.2s;
+        }
+        .filter-pill.active, .filter-pill:hover { background: rgba(59,130,246,0.2); border-color: #3b82f6; color: #fff; }
+        #nav-placeholder { position: sticky; top: 0; z-index: 1050; }
+        .feature-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 0.7rem; }
+        .feature-item { background: rgba(255,255,255,0.03); padding: 3px 6px; border-radius: 4px; }
+        .feature-label { color: rgba(255,255,255,0.4); }
+    </style>
+</head>
+<body>
+    <div id="nav-placeholder"></div>
+    <div class="container-fluid px-4 py-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+            <div>
+                <a href="/defense/" class="text-white-50 text-decoration-none">← Defense Overview</a>
+                <div class="live-header mt-1">
+                    <h2 class="fw-800 mb-0">👁 Login Monitor</h2>
+                    <div class="live-dot"></div>
+                    <span class="text-white-50" style="font-size:0.8rem">Live — polling every 3s</span>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="filter-pill active" data-filter="all" onclick="setFilter('all', this)">All Events</button>
+                <button class="filter-pill" data-filter="anomalous" onclick="setFilter('anomalous', this)">🔴 Anomalies Only</button>
+                <button class="filter-pill" onclick="simulateAttack()">⚡ Simulate Attack</button>
+                <button class="filter-pill" onclick="simulateNormal()">🟢 Normal Login</button>
+            </div>
+        </div>
+
+        <!-- Event Feed -->
+        <div class="glass-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-700 mb-0">Login Event Feed</h6>
+                <span class="text-white-50" style="font-size:0.78rem" id="eventCount">0 events</span>
+            </div>
+
+            <!-- Header -->
+            <div class="event-row" style="border-left-color: transparent; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); font-weight: 600;">
+                <div class="event-time">Time</div>
+                <div class="event-user">User</div>
+                <div class="event-ip">IP Address</div>
+                <div class="event-geo">Location</div>
+                <div style="min-width:50px">Status</div>
+                <div style="min-width:70px">Score</div>
+                <div style="flex:1">Features</div>
+            </div>
+
+            <div id="eventFeed" style="max-height: 70vh; overflow-y: auto;">
+                <div class="text-center text-white-50 py-5">Loading events...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        fetch('/static/shared/nav.html').then(r => r.text()).then(h => document.getElementById('nav-placeholder').innerHTML = h);
+
+        let currentFilter = 'all';
+
+        function setFilter(filter, el) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            if (el) el.classList.add('active');
+            loadEvents();
+        }
+
+        function scoreClass(score, threshold) {
+            if (!score && score !== 0) return { cls: 'score-green', level: 'normal' };
+            if (score > threshold) return { cls: 'score-red', level: 'critical' };
+            if (score > threshold * 0.6) return { cls: 'score-yellow', level: 'warning' };
+            return { cls: 'score-green', level: 'normal' };
+        }
+
+        function loadEvents() {
+            const endpoint = currentFilter === 'anomalous' ? '/api/defense/anomalies' : '/api/defense/events?limit=100';
+            fetch(endpoint)
+                .then(r => r.json())
+                .then(data => {
+                    const events = data.events || data.anomalies || [];
+                    document.getElementById('eventCount').textContent = `${events.length} events`;
+                    const feed = document.getElementById('eventFeed');
+
+                    if (events.length === 0) {
+                        feed.innerHTML = '<div class="text-center text-white-50 py-5">No events found</div>';
+                        return;
+                    }
+
+                    // Get threshold from first scored event
+                    const threshold = 20.09; // chi2(0.975, 8)
+
+                    feed.innerHTML = events.map(e => {
+                        const { cls, level } = scoreClass(e.anomaly_score, threshold);
+                        const time = e.timestamp ? new Date(e.timestamp).toLocaleTimeString() : '-';
+                        const f = e.features || {};
+                        return `<div class="event-row ${level}">
+                            <div class="event-time">${time}</div>
+                            <div class="event-user">${e.username}</div>
+                            <div class="event-ip">${e.ip_address}</div>
+                            <div class="event-geo">${e.city || '-'}, ${e.country || '-'}</div>
+                            <div>${e.success !== false ? '<span class="badge bg-success bg-opacity-25 text-success">OK</span>' : '<span class="badge bg-danger bg-opacity-25 text-danger">FAIL</span>'}</div>
+                            <div><span class="score-badge ${cls}">${e.anomaly_score !== null ? e.anomaly_score.toFixed(1) : '—'}</span></div>
+                            <div class="feature-grid">
+                                <div class="feature-item"><span class="feature-label">hr:</span> ${f.hour_of_day?.toFixed(0) || '-'}</div>
+                                <div class="feature-item"><span class="feature-label">ip:</span> ${f.ip_is_new ? '⚠new' : 'ok'}</div>
+                                <div class="feature-item"><span class="feature-label">geo:</span> ${f.geo_distance_km?.toFixed(0) || 0}km</div>
+                                <div class="feature-item"><span class="feature-label">spd:</span> ${f.typing_speed_ms?.toFixed(0) || '-'}ms</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                });
+        }
+
+        async function simulateAttack() {
+            await fetch('/api/defense/simulate-login?is_attack=true', { method: 'POST' });
+            loadEvents();
+        }
+        async function simulateNormal() {
+            await fetch('/api/defense/simulate-login', { method: 'POST' });
+            loadEvents();
+        }
+
+        loadEvents();
+        setInterval(loadEvents, 3000);
+    </script>
+</body>
+</html>

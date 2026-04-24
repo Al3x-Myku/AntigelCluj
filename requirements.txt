@@ -1,0 +1,34 @@
+# FastAPI + Server
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+jinja2==3.1.4
+
+# Database
+sqlalchemy==2.0.35
+aiosqlite==0.20.0
+
+# Config
+python-dotenv==1.0.1
+
+# Redis + Queue
+redis==5.1.1
+rq==1.16.2
+
+# ML / Anomaly Detection
+scikit-learn==1.5.2
+scipy==1.14.1
+numpy==1.26.4
+joblib==1.4.2
+
+# ONNX (optional GPU inference)
+onnxruntime==1.19.2
+
+# Email
+# smtplib is built-in
+
+# Faker for seed data
+faker==28.4.1
+
+# CSV
+# csv is built-in
