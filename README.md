@@ -240,6 +240,25 @@ For high-volume deployments, the `ml/` directory contains a PyTorch-based **LSTM
 - Each target gets a unique UUID token in their link for tracking
 - Click tracking → credential capture → redirect to real site
 
+### 🔌 Modular Lockdown System
+
+PhishGuard's lockdown engine is designed to be **database-agnostic**. It uses a pluggable adapter pattern to integrate with any existing organization's user management system.
+
+Instead of writing custom logic for every possible database, you just set the `LOCKDOWN_BACKEND` environment variable. PhishGuard currently supports 5 out-of-the-box adapters:
+
+1. **`sqlite` (Default)**: Uses PhishGuard's internal demo tables.
+2. **`postgresql`**: Connects directly to a company's existing PostgreSQL user tables (via `LOCKDOWN_PG_DSN`).
+3. **`mysql`**: Connects to existing MySQL/MariaDB databases.
+4. **`ldap`**: Connects to **Active Directory** or OpenLDAP. Disables accounts by modifying the `userAccountControl` attribute directly.
+5. **`api`**: Connects to proprietary SaaS identity providers (Okta, Auth0) via REST API calls.
+
+When an anomaly triggers a lockdown (or a Blue Team operator clicks "Lockdown"), PhishGuard routes the command through the active adapter to execute 5 steps on the external database:
+1. Disable account login
+2. Revoke active sessions
+3. Freeze linked cards/credentials
+4. Revoke API tokens
+5. Suspend subscriptions
+
 ### 📅 Calendar Invite Attack (adapted from [Tangled](https://github.com/ineesdv/Tangled))
 
 PhishGuard weaponizes **iCalendar automatic event processing** (RFC 5546) to deliver phishing via spoofed calendar invites:
