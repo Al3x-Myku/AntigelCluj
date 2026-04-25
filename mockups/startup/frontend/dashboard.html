@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreezeTech — Panou de control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .navbar .brand svg {
+            width: 28px;
+            height: 28px;
+            color: #0891b2;
+        }
+
+        .navbar .brand-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0e7490;
+            letter-spacing: -0.3px;
+        }
+
+        .navbar .right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .navbar .user-info {
+            text-align: right;
+        }
+
+        .navbar .user-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .navbar .user-role {
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .btn-logout {
+            padding: 7px 14px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-logout:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        /* ── Content ── */
+        .content {
+            max-width: 860px;
+            margin: 28px auto;
+            padding: 0 20px;
+        }
+
+        /* ── Welcome ── */
+        .welcome {
+            background: #fff;
+            border-radius: 10px;
+            padding: 24px 28px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+
+        .welcome h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .welcome p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .session-box {
+            margin-top: 16px;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .session-box .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #0e7490;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+        }
+
+        .session-box .token {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #0f766e;
+            word-break: break-all;
+            background: rgba(0,0,0,0.03);
+            padding: 8px;
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
+        /* ── Stats row ── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: #fff;
+            border-radius: 10px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        .stat .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+        }
+
+        .stat .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .stat .stat-sub {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .stat.c1 .stat-value { color: #0891b2; }
+        .stat.c2 .stat-value { color: #059669; }
+        .stat.c3 .stat-value { color: #d97706; }
+        .stat.c4 .stat-value { color: #7c3aed; }
+
+        /* ── Section ── */
+        .section-header {
+            font-size: 15px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 12px;
+        }
+
+        /* ── Table ── */
+        .table-wrap {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            background: #fafafa;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table td {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #374151;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        table tr:last-child td { border-bottom: none; }
+        table tr:hover td { background: #fafafa; }
+
+        .device-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .device-serial {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 1px;
+        }
+
+        .temp {
+            font-weight: 500;
+        }
+
+        .temp-target {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.online   { background: #dcfce7; color: #166534; }
+        .badge.offline   { background: #f3f4f6; color: #6b7280; }
+        .badge.cooling   { background: #e0f2fe; color: #0369a1; }
+        .badge.heating   { background: #fff7ed; color: #c2410c; }
+        .badge.auto      { background: #f0fdfa; color: #0e7490; }
+        .badge.fan       { background: #f3f4f6; color: #4b5563; }
+        .badge.dry       { background: #fefce8; color: #854d0e; }
+
+        .empty-row {
+            text-align: center;
+            padding: 32px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        /* ── Footer ── */
+        .site-footer {
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+            margin-top: 20px;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            table th, table td { padding: 10px 12px; font-size: 12px; }
+            .navbar .user-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/" class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v6"/>
+            <path d="M12 22v-6"/>
+            <path d="M4.93 4.93l4.24 4.24"/>
+            <path d="M14.83 14.83l4.24 4.24"/>
+            <path d="M2 12h6"/>
+            <path d="M16 12h6"/>
+            <path d="M4.93 19.07l4.24-4.24"/>
+            <path d="M14.83 9.17l4.24-4.24"/>
+        </svg>
+        <span class="brand-name">BreezeTech</span>
+    </a>
+    <div class="right">
+        <div class="user-info">
+            <div class="user-name" id="userName">—</div>
+            <div class="user-role" id="userRole">—</div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Deconectare</button>
+    </div>
+</nav>
+
+<div class="content">
+    <!-- Welcome -->
+    <div class="welcome">
+        <h1 id="greeting">Bine ai revenit</h1>
+        <p>Ești conectat la platforma de management al echipamentelor HVAC.</p>
+        <div class="session-box">
+            <div class="label">Sesiune activă — JWT Token</div>
+            <div class="token" id="tokenPreview">—</div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats" id="statsGrid">
+        <div class="stat c1">
+            <div class="stat-label">Echipamente</div>
+            <div class="stat-value" id="statDevices">—</div>
+            <div class="stat-sub">Unități AC înregistrate</div>
+        </div>
+        <div class="stat c2">
+            <div class="stat-label">Online</div>
+            <div class="stat-value" id="statOnline">—</div>
+            <div class="stat-sub">Conectate acum</div>
+        </div>
+        <div class="stat c3">
+            <div class="stat-label">Tichete</div>
+            <div class="stat-value" id="statTickets">—</div>
+            <div class="stat-sub">Cereri de service</div>
+        </div>
+        <div class="stat c4">
+            <div class="stat-label">Chei API</div>
+            <div class="stat-value" id="statKeys">—</div>
+            <div class="stat-sub">Integrări active</div>
+        </div>
+    </div>
+
+    <!-- Devices -->
+    <h2 class="section-header">Echipamente aer condiționat</h2>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Echipament</th>
+                    <th>Locație</th>
+                    <th>Temperatură</th>
+                    <th>Mod</th>
+                    <th>Stare</th>
+                </tr>
+            </thead>
+            <tbody id="devicesBody">
+                <tr><td colspan="5" class="empty-row">Se încarcă echipamentele...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer class="site-footer">
+    &copy; 2026 BreezeTech SRL — Cluj-Napoca. Toate drepturile rezervate.
+</footer>
+
+<script>
+    const token = localStorage.getItem('access_token');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    if (!token || !user) {
+        window.location.href = '/';
+    } else {
+        document.getElementById('userName').textContent = user.full_name;
+        document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : user.role === 'technician' ? 'Tehnician' : 'Client';
+        document.getElementById('greeting').textContent = 'Bine ai revenit, ' + user.full_name.split(' ')[0];
+        document.getElementById('tokenPreview').textContent = token;
+
+        // Demo stats
+        document.getElementById('statDevices').textContent = '3';
+        document.getElementById('statOnline').textContent = '2';
+        document.getElementById('statTickets').textContent = '1';
+        document.getElementById('statKeys').textContent = '1';
+
+        // Demo devices
+        const devices = [
+            { name: 'Daikin FTXM25R', serial: 'BT-DA-2024001', location: 'Living', target: 22.0, current: 22.3, mode: 'cooling', online: true },
+            { name: 'Samsung AR12TXHQ', serial: 'BT-SA-2024002', location: 'Dormitor', target: 20.5, current: 21.1, mode: 'auto', online: true },
+            { name: 'LG S18ET', serial: 'BT-LG-2024003', location: 'Birou', target: 23.0, current: 25.8, mode: 'heating', online: false },
+        ];
+
+        const modeLabels = { cooling: 'Răcire', heating: 'Încălzire', auto: 'Auto', fan: 'Ventilare', dry: 'Uscare' };
+
+        const tbody = document.getElementById('devicesBody');
+        tbody.innerHTML = devices.map(d => `
+            <tr>
+                <td>
+                    <div class="device-name">${d.name}</div>
+                    <div class="device-serial">${d.serial}</div>
+                </td>
+                <td>${d.location}</td>
+                <td>
+                    <span class="temp">${d.current}°C</span>
+                    <span class="temp-target">→ ${d.target}°C</span>
+                </td>
+                <td><span class="badge ${d.mode}">${modeLabels[d.mode] || d.mode}</span></td>
+                <td><span class="badge ${d.online ? 'online' : 'offline'}">${d.online ? 'Online' : 'Offline'}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function logout() {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+    }
+</script>
+
+</body>
+</html>
