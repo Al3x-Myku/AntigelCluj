@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard — Email Scanner</title>
+    <meta name="description" content="PhishGuard email defense scanner — detect and prevent phishing emails in real-time">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --accent: #00e676; --danger: #ff1744; --warning: #ff9100; --safe: #00e676; }
+        body { background: #0a0e17; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .navbar { background: rgba(10,14,23,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .nav-link { color: rgba(255,255,255,0.6) !important; transition: color 0.2s; }
+        .nav-link:hover, .nav-link.active { color: #fff !important; }
+        .stat-card {
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px; padding: 1.5rem; text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        .stat-value { font-size: 2.2rem; font-weight: 700; }
+        .stat-label { color: rgba(255,255,255,0.5); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .table-dark { --bs-table-bg: rgba(255,255,255,0.02); }
+        .badge-dangerous { background: rgba(255,23,68,0.2); color: #ff1744; border: 1px solid rgba(255,23,68,0.3); }
+        .badge-suspicious { background: rgba(255,145,0,0.2); color: #ff9100; border: 1px solid rgba(255,145,0,0.3); }
+        .badge-safe { background: rgba(0,230,118,0.2); color: #00e676; border: 1px solid rgba(0,230,118,0.3); }
+        .badge-quarantined { background: rgba(255,145,0,0.15); color: #ff9100; }
+        .badge-deleted { background: rgba(255,23,68,0.15); color: #ff1744; }
+        .badge-released { background: rgba(0,230,118,0.15); color: #00e676; }
+        .scan-form { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 2rem; }
+        .form-control, .form-select { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .form-control:focus { background: rgba(255,255,255,0.1); border-color: #00e676; color: #fff; box-shadow: 0 0 0 3px rgba(0,230,118,0.15); }
+        .btn-scan { background: linear-gradient(135deg, #00c853, #00e676); border: none; font-weight: 600; }
+        .btn-scan:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,230,118,0.3); }
+        .btn-delete { background: rgba(255,23,68,0.15); border: 1px solid rgba(255,23,68,0.3); color: #ff1744; }
+        .btn-delete:hover { background: rgba(255,23,68,0.3); color: #fff; }
+        .btn-release { background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.3); color: #00e676; }
+        .btn-release:hover { background: rgba(0,230,118,0.3); color: #fff; }
+        .verdict-box { border-radius: 12px; padding: 1.5rem; margin-top: 1rem; }
+        .verdict-dangerous { background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.3); }
+        .verdict-suspicious { background: rgba(255,145,0,0.1); border: 1px solid rgba(255,145,0,0.3); }
+        .verdict-safe { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); }
+        .flag-item { padding: 0.3rem 0; font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+        .flag-item::before { content: "⚠ "; }
+        .progress-bar-danger { background: linear-gradient(90deg, #ff1744, #d50000); }
+        .progress-bar-warning { background: linear-gradient(90deg, #ff9100, #ff6d00); }
+        .progress-bar-safe { background: linear-gradient(90deg, #00e676, #00c853); }
+        .section-title { font-weight: 700; font-size: 1.3rem; margin-bottom: 1.5rem; }
+        .section-title .icon { margin-right: 0.5rem; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="/">🛡 PhishGuard</a>
+            <div class="navbar-nav ms-auto d-flex flex-row gap-3">
+                <a class="nav-link" href="/attack/">⚔ Attack</a>
+                <a class="nav-link" href="/defense/">🛡 Defense</a>
+                <a class="nav-link" href="/defense/monitor">📊 Monitor</a>
+                <a class="nav-link" href="/defense/lockdown">🔒 Lockdown</a>
+                <a class="nav-link active" href="/defense/email-scanner">📧 Email Scanner</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 py-4">
+        <h2 class="mb-1">📧 Email Defense Scanner</h2>
+        <p class="text-muted mb-4">Scan incoming emails for phishing indicators • Quarantine suspicious content • Auto-delete threats</p>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4" id="stats-row">
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-info" id="stat-scanned">—</div><div class="stat-label">Scanned</div></div></div>
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-warning" id="stat-quarantined">—</div><div class="stat-label">Quarantined</div></div></div>
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-danger" id="stat-dangerous">—</div><div class="stat-label">Dangerous</div></div></div>
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-danger" id="stat-deleted">—</div><div class="stat-label">Deleted</div></div></div>
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-success" id="stat-released">—</div><div class="stat-label">Released</div></div></div>
+            <div class="col-md-2"><div class="stat-card"><div class="stat-value text-success" id="stat-prevention">—</div><div class="stat-label">Prevention %</div></div></div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Manual Scan Form -->
+            <div class="col-lg-5">
+                <div class="scan-form">
+                    <div class="section-title"><span class="icon">🔍</span>Scan Email Content</div>
+                    <div class="mb-3">
+                        <label class="form-label">From Address</label>
+                        <input type="text" class="form-control" id="scan-from" placeholder="sender@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">To Address</label>
+                        <input type="text" class="form-control" id="scan-to" placeholder="recipient@company.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="scan-subject" placeholder="Email subject line">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Body</label>
+                        <textarea class="form-control" id="scan-body" rows="5" placeholder="Paste email body here..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reply-To (optional)</label>
+                        <input type="text" class="form-control" id="scan-reply-to" placeholder="different-reply@example.com">
+                    </div>
+                    <button class="btn btn-scan w-100" onclick="scanEmail()">🔍 Scan Email</button>
+                    <hr class="my-3" style="border-color: rgba(255,255,255,0.1)">
+                    <button class="btn btn-outline-info w-100 mb-2" onclick="scanCaptured()">📂 Scan All Captured Emails</button>
+                    <button class="btn btn-delete w-100" onclick="deleteAllFlagged()">🗑️ Delete All Flagged Emails</button>
+
+                    <!-- Verdict Display -->
+                    <div id="verdict-display" style="display:none"></div>
+                </div>
+            </div>
+
+            <!-- Right: Quarantine Feed -->
+            <div class="col-lg-7">
+                <div class="section-title"><span class="icon">🔒</span>Quarantine Feed</div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Score</th>
+                                <th>From</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Flags</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quarantine-body">
+                            <tr><td colspan="7" class="text-center text-muted py-4">Loading quarantine feed...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const API = '';
+
+    async function loadStats() {
+        try {
+            const res = await fetch(`${API}/api/defense/email/stats`);
+            const data = await res.json();
+            document.getElementById('stat-scanned').textContent = data.total_scanned || 0;
+            document.getElementById('stat-quarantined').textContent = data.quarantined || 0;
+            document.getElementById('stat-dangerous').textContent = data.dangerous || 0;
+            document.getElementById('stat-deleted').textContent = data.deleted || 0;
+            document.getElementById('stat-released').textContent = data.released || 0;
+            document.getElementById('stat-prevention').textContent = `${data.prevention_rate || 0}%`;
+        } catch(e) { console.error('Stats load error:', e); }
+    }
+
+    async function loadQuarantine() {
+        try {
+            const res = await fetch(`${API}/api/defense/email/quarantine?limit=50`);
+            const data = await res.json();
+            const tbody = document.getElementById('quarantine-body');
+            if (!data.quarantine || data.quarantine.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No quarantined emails yet. Scan some emails to begin.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.quarantine.map(q => {
+                const riskBadge = `<span class="badge badge-${q.risk_level}">${q.risk_level.toUpperCase()}</span>`;
+                const statusBadge = `<span class="badge badge-${q.status}">${q.status}</span>`;
+                const scoreBar = `<div class="d-flex align-items-center gap-2">
+                    <div class="progress" style="width:60px;height:6px;">
+                        <div class="progress-bar progress-bar-${q.risk_level === 'dangerous' ? 'danger' : q.risk_level === 'suspicious' ? 'warning' : 'safe'}"
+                             style="width:${Math.round(q.scan_score*100)}%"></div>
+                    </div>
+                    <small>${(q.scan_score*100).toFixed(0)}%</small>
+                </div>`;
+                const flagCount = (q.flags || []).length;
+                const actions = q.status === 'quarantined' ? `
+                    <button class="btn btn-delete btn-sm me-1" onclick="deleteEmail('${q.quarantine_id}')">🗑️</button>
+                    <button class="btn btn-release btn-sm" onclick="releaseEmail('${q.quarantine_id}')">✓</button>
+                ` : '—';
+                return `<tr>
+                    <td>${riskBadge}</td>
+                    <td>${scoreBar}</td>
+                    <td><small>${(q.from_addr||'').substring(0,30)}</small></td>
+                    <td><small>${(q.subject||'').substring(0,40)}</small></td>
+                    <td>${statusBadge}</td>
+                    <td><small>${flagCount} flags</small></td>
+                    <td>${actions}</td>
+                </tr>`;
+            }).join('');
+        } catch(e) { console.error('Quarantine load error:', e); }
+    }
+
+    async function scanEmail() {
+        const payload = {
+            from_addr: document.getElementById('scan-from').value,
+            to_addr: document.getElementById('scan-to').value,
+            subject: document.getElementById('scan-subject').value,
+            body: document.getElementById('scan-body').value,
+            reply_to: document.getElementById('scan-reply-to').value,
+        };
+        try {
+            const res = await fetch(`${API}/api/defense/email/scan`, {
+                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            showVerdict(data.verdict);
+            loadStats();
+            loadQuarantine();
+        } catch(e) { alert('Scan failed: ' + e.message); }
+    }
+
+    function showVerdict(v) {
+        const el = document.getElementById('verdict-display');
+        el.style.display = 'block';
+        const flagsHtml = (v.flags || []).map(f => `<div class="flag-item">${f}</div>`).join('');
+        el.innerHTML = `
+            <div class="verdict-box verdict-${v.risk_level}">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">${v.risk_level === 'dangerous' ? '🚨' : v.risk_level === 'suspicious' ? '⚠️' : '✅'} ${v.risk_level.toUpperCase()}</h5>
+                    <span class="badge bg-dark">${(v.score*100).toFixed(0)}% risk</span>
+                </div>
+                <p class="mb-2" style="font-size:0.9rem">${v.recommendation}</p>
+                ${flagsHtml ? `<hr style="border-color:rgba(255,255,255,0.1)"><div>${flagsHtml}</div>` : ''}
+            </div>
+        `;
+    }
+
+    async function scanCaptured() {
+        try {
+            const res = await fetch(`${API}/api/defense/email/scan-captured`, {method:'POST'});
+            const data = await res.json();
+            alert(`Scanned: ${data.scanned} | Flagged: ${data.flagged}`);
+            loadStats();
+            loadQuarantine();
+        } catch(e) { alert('Scan captured failed: ' + e.message); }
+    }
+
+    async function deleteEmail(qid) {
+        try {
+            const res = await fetch(`${API}/api/defense/email/delete`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({quarantine_id: qid})
+            });
+            const data = await res.json();
+            loadStats();
+            loadQuarantine();
+        } catch(e) { alert('Delete failed: ' + e.message); }
+    }
+
+    async function releaseEmail(qid) {
+        try {
+            await fetch(`${API}/api/defense/email/release`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({quarantine_id: qid})
+            });
+            loadStats();
+            loadQuarantine();
+        } catch(e) { alert('Release failed: ' + e.message); }
+    }
+
+    async function deleteAllFlagged() {
+        if (!confirm('Delete ALL quarantined emails from recipient mailboxes?')) return;
+        try {
+            const res = await fetch(`${API}/api/defense/email/delete-all-flagged`, {method:'POST'});
+            const data = await res.json();
+            alert(`Deleted: ${data.deleted} | Failed: ${data.failed}`);
+            loadStats();
+            loadQuarantine();
+        } catch(e) { alert('Bulk delete failed: ' + e.message); }
+    }
+
+    // Init + polling
+    loadStats();
+    loadQuarantine();
+    setInterval(loadStats, 5000);
+    setInterval(loadQuarantine, 5000);
+    </script>
+</body>
+</html>
