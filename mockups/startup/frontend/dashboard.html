@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreezeTech — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .topbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #0d9488;
+        }
+
+        .topbar .logo svg { width: 28px; height: 28px; fill: #0d9488; }
+
+        .topbar .user-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .topbar .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .topbar .user-role {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #f0fdfa;
+            color: #0d9488;
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: #fee2e2;
+            color: #b91c1c;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-logout:hover { background: #fecaca; }
+
+        /* ── Content ── */
+        .content {
+            max-width: 900px;
+            margin: 36px auto;
+            padding: 0 24px;
+        }
+
+        .welcome-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 32px 36px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        .welcome-card h1 {
+            font-size: 24px;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .welcome-card p {
+            color: #6b7280;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .session-info {
+            margin-top: 20px;
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            border-radius: 10px;
+            padding: 16px 20px;
+            font-size: 13px;
+            color: #115e59;
+            text-align: left;
+        }
+
+        .session-info strong { font-weight: 600; }
+
+        .session-info .token-preview {
+            margin-top: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #0f766e;
+            word-break: break-all;
+            background: rgba(0,0,0,0.03);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        /* ── Stats grid ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 22px 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+
+        .stat-card .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .stat-card .stat-sub {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        .stat-card.teal .stat-value { color: #0d9488; }
+        .stat-card.amber .stat-value { color: #d97706; }
+        .stat-card.red .stat-value { color: #dc2626; }
+        .stat-card.blue .stat-value { color: #2563eb; }
+
+        /* ── Devices table ── */
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        .table-card {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th {
+            text-align: left;
+            padding: 14px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        table td {
+            padding: 14px 18px;
+            font-size: 14px;
+            color: #374151;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        table tr:last-child td { border-bottom: none; }
+        table tr:hover { background: #f9fafb; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.online { background: #dcfce7; color: #166534; }
+        .badge.offline { background: #fee2e2; color: #991b1b; }
+        .badge.cooling { background: #dbeafe; color: #1e40af; }
+        .badge.heating { background: #ffedd5; color: #c2410c; }
+        .badge.auto { background: #f0fdfa; color: #115e59; }
+        .badge.fan { background: #f3f4f6; color: #4b5563; }
+        .badge.dry { background: #fef3c7; color: #92400e; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            table th, table td { padding: 10px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+        BreezeTech
+    </div>
+    <div class="user-area">
+        <span class="user-role" id="userRole">—</span>
+        <span class="user-name" id="userName">—</span>
+        <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+</div>
+
+<div class="content">
+    <!-- Welcome -->
+    <div class="welcome-card">
+        <h1 id="greeting">Welcome back</h1>
+        <p>You are securely logged in to the BreezeTech IoT Platform.</p>
+        <div class="session-info">
+            <strong>Session active</strong> — Authenticated via JWT token<br>
+            <div class="token-preview" id="tokenPreview">—</div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card teal">
+            <div class="stat-label">Total Devices</div>
+            <div class="stat-value" id="statDevices">—</div>
+            <div class="stat-sub">Registered AC units</div>
+        </div>
+        <div class="stat-card blue">
+            <div class="stat-label">Online</div>
+            <div class="stat-value" id="statOnline">—</div>
+            <div class="stat-sub">Currently connected</div>
+        </div>
+        <div class="stat-card amber">
+            <div class="stat-label">Open Tickets</div>
+            <div class="stat-value" id="statTickets">—</div>
+            <div class="stat-sub">Service requests</div>
+        </div>
+        <div class="stat-card red">
+            <div class="stat-label">API Keys</div>
+            <div class="stat-value" id="statKeys">—</div>
+            <div class="stat-sub">Active integrations</div>
+        </div>
+    </div>
+
+    <!-- Devices table placeholder -->
+    <h2 class="section-title">🌡 Your AC Devices</h2>
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Location</th>
+                    <th>Temp</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="devicesBody">
+                <tr><td colspan="5" class="empty-state">Loading devices...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const token = localStorage.getItem('access_token');
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+    if (!token || !user) {
+        window.location.href = '/';
+    } else {
+        document.getElementById('userName').textContent = user.full_name;
+        document.getElementById('userRole').textContent = user.role;
+        document.getElementById('greeting').textContent = 'Welcome, ' + user.full_name.split(' ')[0];
+        document.getElementById('tokenPreview').textContent = token;
+
+        // Demo stats (static for mockup)
+        document.getElementById('statDevices').textContent = '3';
+        document.getElementById('statOnline').textContent = '2';
+        document.getElementById('statTickets').textContent = '1';
+        document.getElementById('statKeys').textContent = '1';
+
+        // Demo devices table
+        const devices = [
+            { name: 'Daikin FTXM25R', serial: 'BT-DA-2024001', location: 'Living Room', target: 22.0, current: 22.3, mode: 'cooling', online: true },
+            { name: 'Samsung AR12TX', serial: 'BT-SA-2024002', location: 'Bedroom', target: 20.5, current: 21.1, mode: 'auto', online: true },
+            { name: 'LG S18ET', serial: 'BT-LG-2024003', location: 'Office', target: 23.0, current: 25.8, mode: 'heating', online: false },
+        ];
+
+        const tbody = document.getElementById('devicesBody');
+        tbody.innerHTML = devices.map(d => `
+            <tr>
+                <td><strong>${d.name}</strong><br><span style="font-size:11px;color:#9ca3af">${d.serial}</span></td>
+                <td>${d.location}</td>
+                <td>${d.current}°C → ${d.target}°C</td>
+                <td><span class="badge ${d.mode}">${d.mode}</span></td>
+                <td><span class="badge ${d.online ? 'online' : 'offline'}">${d.online ? 'Online' : 'Offline'}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function logout() {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+    }
+</script>
+
+</body>
+</html>
