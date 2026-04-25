@@ -1,0 +1,444 @@
+<!-- PhishGuard: OSINT Intelligence Dashboard -->
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OSINT Recon — PhishGuard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface": "#0b1326",
+                    "surface-container": "#171f33",
+                    "surface-container-high": "#222a3d",
+                    "surface-container-highest": "#2d3449",
+                    "on-surface": "#dae2fd",
+                    "on-surface-variant": "#bcc9cd",
+                    "outline": "#869397",
+                    "outline-variant": "#3d494c",
+                    "primary": "#4cd7f6",
+                    "secondary": "#4edea3",
+                    "error": "#ffb4ab",
+                    "background": "#0b1326",
+                    "on-background": "#dae2fd",
+                    "osint": "#c084fc",
+                    "osint-dim": "#7c3aed",
+                    "osint-surface": "#1e1533",
+                },
+                fontFamily: {
+                    "inter": ["Inter", "sans-serif"],
+                    "mono": ["JetBrains Mono", "monospace"],
+                },
+            }
+        }
+    }
+</script>
+<style>
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(192,132,252,0.4); } 50% { box-shadow: 0 0 20px 4px rgba(192,132,252,0.2); } }
+    .scan-active { animation: pulse-glow 2s ease-in-out infinite; }
+    @keyframes slide-up { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .animate-row { animation: slide-up 0.3s ease-out; }
+    .log-feed::-webkit-scrollbar { width: 4px; }
+    .log-feed::-webkit-scrollbar-track { background: transparent; }
+    .log-feed::-webkit-scrollbar-thumb { background: #7c3aed; border-radius: 2px; }
+    @keyframes typing { from { width: 0; } to { width: 100%; } }
+    @keyframes blink { 0%, 100% { border-color: #c084fc; } 50% { border-color: transparent; } }
+</style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-inter antialiased">
+<!-- TopNavBar -->
+<header class="flex justify-between items-center w-full px-6 py-3 h-14 bg-slate-950 tracking-tight text-sm border-b border-slate-800 z-50">
+    <div class="flex items-center gap-4">
+        <a href="/" class="text-lg font-bold tracking-tighter text-cyan-500 uppercase hover:text-cyan-400 transition-colors">PhishGuard</a>
+        <span class="text-slate-600">|</span>
+        <span class="text-purple-400 font-semibold text-xs uppercase tracking-widest">OSINT Recon</span>
+    </div>
+    <nav class="hidden md:flex items-center gap-4 h-full text-sm">
+        <a class="text-slate-400 hover:text-slate-100 transition-colors px-2" href="/attack/">Red Team</a>
+        <a class="text-slate-400 hover:text-slate-100 transition-colors px-2" href="/defense/">Blue Team</a>
+        <a class="text-purple-400 border-b-2 border-purple-400 pb-1 px-2" href="/attack/osint">OSINT</a>
+    </nav>
+</header>
+
+<!-- Main Content -->
+<main class="flex-grow flex flex-col p-6 w-full max-w-7xl mx-auto gap-6">
+
+    <!-- Page Header + Scan Input -->
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-4">
+        <div class="flex-grow">
+            <h1 class="text-2xl font-bold text-on-surface flex items-center gap-2">
+                <span class="material-symbols-outlined text-purple-400" style="font-variation-settings: 'FILL' 1;">radar</span>
+                OSINT Intelligence Recon
+            </h1>
+            <p class="text-on-surface-variant text-sm mt-1">Autonomous web reconnaissance — scrape emails, phones, and contacts from public company sources.</p>
+        </div>
+    </div>
+
+    <!-- Scan Form -->
+    <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-purple-400">search</span>
+            <h2 class="text-lg font-semibold text-on-surface">Launch Recon Scan</h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-slate-500 mb-1">Target Domain</label>
+                <input id="scanDomain" type="text" placeholder="e.g. ing.ro, bcr.ro, emag.ro"
+                       class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-on-surface placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"/>
+            </div>
+            <div>
+                <label class="block text-xs uppercase tracking-widest text-slate-500 mb-1">Company Name (optional)</label>
+                <input id="scanCompany" type="text" placeholder="e.g. ING Bank Romania"
+                       class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-on-surface placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"/>
+            </div>
+            <div class="flex items-end">
+                <button id="btnScan" onclick="startScan()"
+                        class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded transition-all duration-200 active:scale-95">
+                    <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+                    <span>Launch Recon</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div id="statsSection" class="hidden">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-4 text-center">
+                <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Status</div>
+                <div id="statStatus" class="text-lg font-bold text-purple-400">—</div>
+            </div>
+            <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-4 text-center">
+                <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Emails Found</div>
+                <div id="statEmails" class="text-2xl font-bold text-cyan-400 font-mono">0</div>
+            </div>
+            <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-4 text-center">
+                <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Phones Found</div>
+                <div id="statPhones" class="text-2xl font-bold text-green-400 font-mono">0</div>
+            </div>
+            <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-4 text-center">
+                <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Total Contacts</div>
+                <div id="statContacts" class="text-2xl font-bold text-amber-400 font-mono">0</div>
+            </div>
+            <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-4 text-center">
+                <div class="text-xs uppercase tracking-widest text-slate-500 mb-1">Scan Duration</div>
+                <div id="statDuration" class="text-lg font-bold text-slate-300 font-mono">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Two Column: Log + Results -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow min-h-0">
+
+        <!-- Live Scan Log -->
+        <div id="logSection" class="hidden lg:col-span-1 bg-[#0f172a] border border-[#1e293b] rounded-lg flex flex-col max-h-[600px]">
+            <div class="flex items-center gap-2 p-4 border-b border-slate-800">
+                <span class="material-symbols-outlined text-green-400 text-[18px]">terminal</span>
+                <h3 class="text-sm font-semibold text-on-surface uppercase tracking-widest">Scan Log</h3>
+                <div id="logPulse" class="hidden ml-auto w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            </div>
+            <div id="logFeed" class="log-feed flex-grow overflow-y-auto p-4 font-mono text-xs text-slate-400 leading-relaxed space-y-0.5">
+                <div class="text-slate-600">Waiting for scan to start...</div>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div id="resultsSection" class="hidden lg:col-span-2 bg-[#0f172a] border border-[#1e293b] rounded-lg flex flex-col max-h-[600px]">
+            <div class="flex items-center justify-between p-4 border-b border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-purple-400 text-[18px]">group</span>
+                    <h3 class="text-sm font-semibold text-on-surface uppercase tracking-widest">Discovered Contacts</h3>
+                    <span id="resultCount" class="text-xs text-slate-500 ml-1">(0)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="exportCSV()" id="btnExport" disabled
+                            class="flex items-center gap-1 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-xs text-slate-400 hover:text-white hover:border-cyan-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[14px]">download</span>
+                        Export CSV
+                    </button>
+                    <button onclick="generateCampaign()" id="btnCampaign" disabled
+                            class="flex items-center gap-1 px-3 py-1.5 bg-purple-700/30 border border-purple-500/40 rounded text-xs text-purple-300 hover:bg-purple-600/40 hover:border-purple-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        <span class="material-symbols-outlined text-[14px]">campaign</span>
+                        Generate Campaign
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow overflow-y-auto">
+                <table class="w-full text-xs">
+                    <thead class="sticky top-0 bg-[#0f172a]">
+                        <tr class="text-left text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                            <th class="px-4 py-2 font-medium">#</th>
+                            <th class="px-4 py-2 font-medium">Email</th>
+                            <th class="px-4 py-2 font-medium">Name</th>
+                            <th class="px-4 py-2 font-medium">Phone</th>
+                            <th class="px-4 py-2 font-medium">Dept</th>
+                            <th class="px-4 py-2 font-medium">Risk</th>
+                            <th class="px-4 py-2 font-medium">Conf</th>
+                            <th class="px-4 py-2 font-medium">Source</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody" class="divide-y divide-slate-800/50">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Previous Scans -->
+    <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-slate-500">history</span>
+            <h2 class="text-sm font-semibold text-on-surface uppercase tracking-widest">Previous Scans</h2>
+            <button onclick="loadScans()" class="ml-auto text-xs text-slate-500 hover:text-purple-400 transition-colors">
+                <span class="material-symbols-outlined text-[14px]">refresh</span>
+            </button>
+        </div>
+        <div id="scansList" class="space-y-2">
+            <div class="text-sm text-slate-600">No previous scans.</div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="flex justify-between items-center w-full px-8 py-4 mt-auto bg-slate-950 text-[10px] tracking-widest uppercase border-t border-slate-800 text-slate-500">
+    <span>© 2026 PHISHGUARD SECURE SYSTEMS. INTERNAL USE ONLY.</span>
+    <div class="flex gap-6">
+        <a class="text-slate-600 hover:text-slate-400 cursor-pointer" href="/">Command Center</a>
+        <a class="text-slate-600 hover:text-slate-400 cursor-pointer" href="/attack/">Campaigns</a>
+        <a class="text-slate-600 hover:text-slate-400 cursor-pointer" href="/defense/">Defense</a>
+    </div>
+</footer>
+
+<script>
+const API = '/api/attack/osint';
+let currentScanId = null;
+let pollTimer = null;
+
+// ─── Start Scan ──────────────────────────────
+async function startScan() {
+    const domain = document.getElementById('scanDomain').value.trim();
+    if (!domain || !domain.includes('.')) {
+        alert('Please enter a valid domain (e.g., example.com)');
+        return;
+    }
+    const company = document.getElementById('scanCompany').value.trim();
+
+    const btn = document.getElementById('btnScan');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Scanning...</span>';
+    btn.classList.add('scan-active');
+
+    // Show panels
+    document.getElementById('statsSection').classList.remove('hidden');
+    document.getElementById('logSection').classList.remove('hidden');
+    document.getElementById('resultsSection').classList.remove('hidden');
+    document.getElementById('logPulse').classList.remove('hidden');
+    document.getElementById('statStatus').textContent = 'SCANNING';
+    document.getElementById('statStatus').className = 'text-lg font-bold text-amber-400 animate-pulse';
+    document.getElementById('logFeed').innerHTML = '<div class="text-purple-400">▶ Initiating scan for ' + domain + '...</div>';
+
+    try {
+        const resp = await fetch(`${API}/scan`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain, company_name: company }),
+        });
+        const data = await resp.json();
+        currentScanId = data.scan_id;
+
+        // Start polling
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollResults, 2000);
+        pollResults();
+    } catch (e) {
+        console.error(e);
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">rocket_launch</span><span>Launch Recon</span>';
+        btn.classList.remove('scan-active');
+        alert('Scan failed to start: ' + e.message);
+    }
+}
+
+// ─── Poll Results ────────────────────────────
+async function pollResults() {
+    if (!currentScanId) return;
+    try {
+        const resp = await fetch(`${API}/results/${currentScanId}`);
+        const data = await resp.json();
+        const scan = data.scan;
+        const results = data.results || [];
+
+        // Update stats
+        document.getElementById('statEmails').textContent = scan.total_emails;
+        document.getElementById('statPhones').textContent = scan.total_phones;
+        document.getElementById('statContacts').textContent = scan.total_contacts;
+        document.getElementById('statDuration').textContent = scan.duration_seconds > 0 ? scan.duration_seconds + 's' : '...';
+        document.getElementById('resultCount').textContent = `(${results.length})`;
+
+        // Update log
+        if (data.log) {
+            const logEl = document.getElementById('logFeed');
+            const lines = data.log.split('\n').filter(l => l.trim());
+            logEl.innerHTML = lines.map(l => {
+                let color = 'text-slate-500';
+                if (l.includes('✓')) color = 'text-green-400';
+                else if (l.includes('✗') || l.includes('Error')) color = 'text-red-400';
+                else if (l.includes('═══')) color = 'text-purple-400 font-bold';
+                else if (l.includes('🔍') || l.includes('🌐') || l.includes('📂') || l.includes('🧩') || l.includes('📱')) color = 'text-cyan-400';
+                return `<div class="${color}">${escapeHtml(l)}</div>`;
+            }).join('');
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Update results table
+        renderResults(results);
+
+        // Check if done
+        if (scan.status === 'completed' || scan.status === 'failed') {
+            clearInterval(pollTimer);
+            pollTimer = null;
+            const btn = document.getElementById('btnScan');
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">rocket_launch</span><span>Launch Recon</span>';
+            btn.classList.remove('scan-active');
+            document.getElementById('logPulse').classList.add('hidden');
+
+            if (scan.status === 'completed') {
+                document.getElementById('statStatus').textContent = 'COMPLETE';
+                document.getElementById('statStatus').className = 'text-lg font-bold text-green-400';
+                document.getElementById('btnExport').disabled = false;
+                document.getElementById('btnCampaign').disabled = false;
+            } else {
+                document.getElementById('statStatus').textContent = 'FAILED';
+                document.getElementById('statStatus').className = 'text-lg font-bold text-red-400';
+            }
+            loadScans();
+        }
+    } catch (e) {
+        console.error('Poll error:', e);
+    }
+}
+
+// ─── Render Results Table ────────────────────
+function renderResults(results) {
+    const tbody = document.getElementById('resultsBody');
+    const seenEmails = new Set();
+    const unique = [];
+    for (const r of results) {
+        const key = r.email || r.phone || r.id;
+        if (!seenEmails.has(key)) {
+            seenEmails.add(key);
+            unique.push(r);
+        }
+    }
+    tbody.innerHTML = unique.map((r, i) => {
+        const riskColor = r.risk_score >= 0.8 ? 'text-red-400' : r.risk_score >= 0.5 ? 'text-amber-400' : 'text-green-400';
+        const confColor = r.confidence >= 0.8 ? 'text-cyan-400' : r.confidence >= 0.5 ? 'text-slate-300' : 'text-slate-500';
+        const riskBar = `<div class="w-12 h-1.5 rounded-full bg-slate-800 overflow-hidden"><div class="h-full rounded-full ${r.risk_score >= 0.8 ? 'bg-red-500' : r.risk_score >= 0.5 ? 'bg-amber-500' : 'bg-green-500'}" style="width:${r.risk_score*100}%"></div></div>`;
+        const source = (r.source_url || '').length > 30 ? r.source_url.substring(0, 30) + '…' : (r.source_url || '—');
+        
+        let fullName = (r.first_name || '') + ' ' + (r.last_name || '');
+        fullName = fullName.trim();
+        if (!fullName) fullName = '—';
+
+        return `<tr class="animate-row hover:bg-slate-800/30 transition-colors">
+            <td class="px-4 py-2 text-slate-600 font-mono">${i+1}</td>
+            <td class="px-4 py-2 font-mono text-cyan-300">${escapeHtml(r.email || '—')}</td>
+            <td class="px-4 py-2 text-on-surface">${escapeHtml(fullName)}</td>
+            <td class="px-4 py-2 font-mono text-slate-400">${escapeHtml(r.phone || '—')}</td>
+            <td class="px-4 py-2"><span class="px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider bg-slate-800 text-slate-400">${escapeHtml(r.department || '—')}</span></td>
+            <td class="px-4 py-2"><div class="flex flex-col items-start gap-0.5"><span class="${riskColor} font-mono font-bold">${(r.risk_score * 100).toFixed(0)}%</span>${riskBar}</div></td>
+            <td class="px-4 py-2 ${confColor} font-mono">${(r.confidence * 100).toFixed(0)}%</td>
+            <td class="px-4 py-2 text-slate-600 truncate max-w-[150px]" title="${escapeHtml(r.source_url || '')}">${escapeHtml(source)}</td>
+        </tr>`;
+    }).join('');
+}
+
+// ─── Export CSV ──────────────────────────────
+function exportCSV() {
+    if (!currentScanId) return;
+    window.open(`${API}/results/${currentScanId}/csv`, '_blank');
+}
+
+// ─── Generate Campaign ──────────────────────
+async function generateCampaign() {
+    if (!currentScanId) return;
+    const btn = document.getElementById('btnCampaign');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span> Creating...';
+
+    try {
+        const resp = await fetch(`${API}/generate-campaign`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scan_id: currentScanId }),
+        });
+        const data = await resp.json();
+        if (data.campaign) {
+            window.location.href = `/attack/campaign/${data.campaign.id}`;
+        } else {
+            alert('Campaign created but no data returned');
+        }
+    } catch (e) {
+        alert('Failed: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">campaign</span> Generate Campaign';
+    }
+}
+
+// ─── Previous Scans ─────────────────────────
+async function loadScans() {
+    try {
+        const resp = await fetch(`${API}/scans`);
+        const data = await resp.json();
+        const scans = data.scans || [];
+        const el = document.getElementById('scansList');
+        if (scans.length === 0) {
+            el.innerHTML = '<div class="text-sm text-slate-600">No previous scans.</div>';
+            return;
+        }
+        el.innerHTML = scans.map(s => {
+            const statusColor = s.status === 'completed' ? 'bg-green-500' : s.status === 'running' ? 'bg-amber-500 animate-pulse' : 'bg-red-500';
+            return `<div class="flex items-center gap-3 p-3 bg-slate-900/30 rounded border border-slate-800/50 hover:border-purple-500/30 transition-colors cursor-pointer" onclick="loadScan('${s.scan_id}')">
+                <div class="w-2 h-2 rounded-full ${statusColor}"></div>
+                <div class="flex-grow">
+                    <span class="text-sm font-medium text-on-surface">${escapeHtml(s.company_name || s.domain)}</span>
+                    <span class="text-xs text-slate-500 ml-2">${escapeHtml(s.domain)}</span>
+                </div>
+                <div class="text-xs text-slate-500 font-mono">${s.total_emails}📧 ${s.total_phones}📱</div>
+                <div class="text-xs text-slate-600">${s.duration_seconds > 0 ? s.duration_seconds + 's' : '—'}</div>
+                <div class="text-[10px] uppercase tracking-widest ${s.status === 'completed' ? 'text-green-400' : s.status === 'running' ? 'text-amber-400' : 'text-red-400'}">${s.status}</div>
+            </div>`;
+        }).join('');
+    } catch (e) { console.error(e); }
+}
+
+async function loadScan(scanId) {
+    currentScanId = scanId;
+    document.getElementById('statsSection').classList.remove('hidden');
+    document.getElementById('logSection').classList.remove('hidden');
+    document.getElementById('resultsSection').classList.remove('hidden');
+    document.getElementById('btnExport').disabled = false;
+    document.getElementById('btnCampaign').disabled = false;
+    await pollResults();
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// Load previous scans on page load
+loadScans();
+</script>
+</body>
+</html>

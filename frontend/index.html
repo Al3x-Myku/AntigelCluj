@@ -142,7 +142,7 @@
 <h1 class="font-h1 text-h1 text-on-surface mb-xs">Command Center</h1>
 <p class="font-body-md text-body-md text-on-surface-variant">Select operational environment.</p>
 </div>
-<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-lg max-w-5xl">
+<div class="w-full grid grid-cols-1 md:grid-cols-3 gap-lg max-w-5xl">
 <!-- RED TEAM Card -->
 <div class="group relative flex flex-col bg-[#0f172a] border border-[#1e293b] rounded-lg overflow-hidden transition-colors duration-300 hover:border-error">
 <!-- Subtle Top Accent Border -->
@@ -150,7 +150,7 @@
 <div class="p-lg flex-grow flex flex-col">
 <div class="flex items-center gap-sm mb-md pb-sm border-b border-[#1e293b]">
 <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">target</span>
-<h2 class="font-h2 text-h2 text-on-surface tracking-tight">RED TEAM OPERATIONS</h2>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">RED TEAM</h2>
 </div>
 <p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">
                         Execute and manage simulated phishing campaigns. Deploy adversarial tactics to test defensive readiness.
@@ -168,12 +168,30 @@
 <div class="p-lg flex-grow flex flex-col">
 <div class="flex items-center gap-sm mb-md pb-sm border-b border-[#1e293b]">
 <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">shield</span>
-<h2 class="font-h2 text-h2 text-on-surface tracking-tight">BLUE TEAM DEFENSE</h2>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">BLUE TEAM</h2>
 </div>
 <p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">
                         Monitor real-time threats and manage incident response. Analyze defensive telemetry and system health.
                     </p>
 <button class="w-full flex items-center justify-center gap-xs px-md py-sm bg-surface-container border border-outline-variant text-on-surface font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container-high hover:border-primary transition-colors duration-200 uppercase" onclick="window.location.href='/defense/'">
+<span>ENTER DASHBOARD</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- OSINT INTELLIGENCE Card -->
+<div class="group relative flex flex-col bg-[#0f172a] border border-[#1e293b] rounded-lg overflow-hidden transition-colors duration-300 hover:border-purple-400">
+<!-- Subtle Top Accent Border -->
+<div class="absolute top-0 left-0 w-full h-[2px] bg-purple-500 opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="p-lg flex-grow flex flex-col">
+<div class="flex items-center gap-sm mb-md pb-sm border-b border-[#1e293b]">
+<span class="material-symbols-outlined text-purple-400" style="font-variation-settings: 'FILL' 1;">radar</span>
+<h2 class="font-h2 text-h2 text-on-surface tracking-tight">OSINT RECON</h2>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-xl flex-grow">
+                        Autonomous web reconnaissance. Scrape emails, phones, and contacts from public sources to build attack campaigns.
+                    </p>
+<button class="w-full flex items-center justify-center gap-xs px-md py-sm bg-surface-container border border-outline-variant text-on-surface font-label-caps text-label-caps rounded-DEFAULT hover:bg-surface-container-high hover:border-purple-400 transition-colors duration-200 uppercase" onclick="window.location.href='/attack/osint'">
 <span>ENTER DASHBOARD</span>
 <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
 </button>

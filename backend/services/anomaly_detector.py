@@ -74,6 +74,14 @@ def train_model(feature_vectors: list[list[float]]) -> dict:
     return stats
 
 
+def _scale_distance(distance: float) -> float:
+    """Scale raw Isolation Forest distance [-0.5, 0.5] to a [0.0, 1.0] probability-like score via sigmoid."""
+    import math
+    # Factor 15 makes a distance of 0 -> 0.5, 0.1 -> 0.81, -0.1 -> 0.18
+    # This stretches the small IF variations perfectly for the UI.
+    return round(1.0 / (1.0 + math.exp(-15.0 * distance)), 4)
+
+
 def score_event(feature_vector: list[float]) -> tuple[float, bool]:
     """
     Compute Anomaly Score for a single login event.
@@ -91,7 +99,7 @@ def score_event(feature_vector: list[float]) -> tuple[float, bool]:
     distance = float(-model.decision_function(X)[0])
     is_anomalous = distance > THRESHOLD
 
-    return round(distance, 4), is_anomalous
+    return _scale_distance(distance), is_anomalous
 
 
 def score_batch(feature_vectors: list[list[float]]) -> list[tuple[float, bool]]:
@@ -103,9 +111,9 @@ def score_batch(feature_vectors: list[list[float]]) -> list[tuple[float, bool]]:
     X = np.array(feature_vectors, dtype=np.float64)
     distances = -model.decision_function(X)
 
-    return [(round(float(d), 4), bool(d > THRESHOLD)) for d in distances]
+    return [(_scale_distance(float(d)), bool(d > THRESHOLD)) for d in distances]
 
 
 def get_threshold() -> float:
-    """Return the current anomaly threshold."""
-    return round(THRESHOLD, 4)
+    """Return the current anomaly threshold scaled to probability."""
+    return _scale_distance(THRESHOLD)

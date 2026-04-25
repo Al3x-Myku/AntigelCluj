@@ -40,7 +40,7 @@ pip install -r requirements.txt --quiet
 # 5. Check Docker (Optional)
 if command -v docker-compose &> /dev/null; then
     echo -e "${BLUE}Starting Docker services (Redis, Mailhog)...${NC}"
-    docker-compose up -d
+    docker-compose up -d redis mailhog
 else
     echo -e "${RED}Docker Compose not found. Proceeding with in-memory fallbacks.${NC}"
 fi

@@ -43,10 +43,12 @@ for subdir in ["attack", "defense", "shared"]:
 from backend.routers.attack import router as attack_router
 from backend.routers.defense import router as defense_router
 from backend.routers.phish import router as phish_router
+from backend.routers.osint import router as osint_router
 
 app.include_router(attack_router, prefix="/api/attack", tags=["Attack (Red Team)"])
 app.include_router(defense_router, prefix="/api/defense", tags=["Defense (Blue Team)"])
 app.include_router(phish_router, tags=["Phishing Pages"])
+app.include_router(osint_router, prefix="/api/attack", tags=["OSINT Intelligence"])
 
 
 # ─── Startup ─────────────────────────────────────────────────
@@ -70,8 +72,8 @@ def on_startup():
 # ─── Frontend Page Routes ────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    """Redirect to attack dashboard."""
-    return """<html><head><meta http-equiv="refresh" content="0;url=/attack/"></head></html>"""
+    """Serve Command Center landing page."""
+    return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
 @app.get("/attack/", response_class=HTMLResponse)
@@ -88,6 +90,12 @@ async def attack_campaign_create():
 @app.get("/attack/campaign/{campaign_id}", response_class=HTMLResponse)
 async def attack_campaign_detail(campaign_id: int):
     return FileResponse(str(FRONTEND_DIR / "attack" / "campaign_detail.html"))
+
+
+@app.get("/attack/osint", response_class=HTMLResponse)
+@app.get("/attack/osint/", response_class=HTMLResponse)
+async def attack_osint():
+    return FileResponse(str(FRONTEND_DIR / "attack" / "osint.html"))
 
 
 @app.get("/defense/", response_class=HTMLResponse)

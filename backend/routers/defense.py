@@ -81,6 +81,21 @@ async def score_events(db: Session = Depends(get_db)):
     return {"scored": len(events), "anomalies_found": sum(1 for _, a in results if a)}
 
 
+# Auto-lockdown state
+AUTO_LOCKDOWN_ENABLED = False
+
+@router.post("/auto-lockdown")
+async def toggle_auto_lockdown(enabled: bool = Query(...)):
+    """Toggle the Blue Team automatic lockdown response."""
+    global AUTO_LOCKDOWN_ENABLED
+    AUTO_LOCKDOWN_ENABLED = enabled
+    return {"status": "success", "auto_lockdown_enabled": AUTO_LOCKDOWN_ENABLED}
+
+@router.get("/auto-lockdown")
+async def get_auto_lockdown():
+    """Get the current Auto-lockdown state."""
+    return {"auto_lockdown_enabled": AUTO_LOCKDOWN_ENABLED}
+
 # ─── Simulate Login (for demo) ───────────────────────────────
 @router.post("/simulate-login")
 async def simulate_login(
@@ -161,7 +176,15 @@ async def simulate_login(
 
     # Auto-lockdown if anomalous
     if is_anom:
-        result["auto_lockdown_warning"] = f"Anomaly score {score} exceeds threshold {anomaly_detector.get_threshold()}"
+        # 0.2 represents a reasonable high-confidence margin for the Isolation Forest
+        threshold = anomaly_detector.get_threshold() + 0.2
+        if score > threshold:
+            if AUTO_LOCKDOWN_ENABLED:
+                execute_lockdown(db, account.id, triggered_by="auto-response")
+                result["auto_lockdown_triggered"] = True
+                result["auto_lockdown_warning"] = f"Account locked. Scope {score} exceeds Auto-response threshold {threshold}"
+            else:
+                result["auto_lockdown_warning"] = f"Anomaly score {score}. Enable Auto-lockdown to block this."
 
     return result
 
