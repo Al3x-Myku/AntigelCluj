@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from passlib.context import CryptContext
-from backend.database import SessionLocal
+from backend.database import SessionLocal, init_db
 from backend.models.user import User
 from backend.models.device import Device
 from backend.models.service_ticket import ServiceTicket
@@ -101,6 +101,7 @@ def _api_key():
 
 
 def run_seed():
+    init_db()
     db = SessionLocal()
     tech_ids = []
     customer_ids = []

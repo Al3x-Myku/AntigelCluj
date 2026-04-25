@@ -1,18 +1,16 @@
-"""BankAccount model — user bank accounts with IBAN."""
+"""BankAccount document helpers — MongoDB."""
 
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, ForeignKey
-from backend.database import Base
 
 
-class BankAccount(Base):
-    __tablename__ = "bank_accounts"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    iban = Column(String(34), unique=True, nullable=False)
-    account_type = Column(String(20), nullable=False)       # checking, savings, business
-    balance = Column(Float, default=0.0)
-    currency = Column(String(3), default="RON")
-    is_frozen = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+def make_bank_account(user_id, iban, account_type, balance=0.0, currency="RON"):
+    """Create a bank account document dict."""
+    return {
+        "user_id": user_id,
+        "iban": iban,
+        "account_type": account_type,
+        "balance": balance,
+        "currency": currency,
+        "is_frozen": False,
+        "created_at": datetime.utcnow(),
+    }

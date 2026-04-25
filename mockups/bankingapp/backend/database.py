@@ -1,32 +1,32 @@
-"""Database engine and session — SQLite (zero-install)."""
+"""Database connection — MongoDB via PyMongo."""
 
 import os
-from pathlib import Path
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from pymongo import MongoClient
 
-# SQLite file lives next to the backend/ folder
-DB_PATH = Path(__file__).parent.parent / "securbank.db"
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
+MONGO_DATABASE = os.getenv("MONGO_DATABASE", "bankingapp")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DATABASE]
 
-
-class Base(DeclarativeBase):
-    pass
-
-
-def get_db():
-    """FastAPI dependency — yields a DB session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# Collections
+users_col = db["users"]
+bank_accounts_col = db["bank_accounts"]
+cards_col = db["cards"]
+api_keys_col = db["api_keys"]
 
 
 def init_db():
-    """Create all tables."""
-    import backend.models  # noqa: F401  — imports User, BankAccount, Card, APIKey
-    Base.metadata.create_all(bind=engine)
+    """Create indexes for performance."""
+    users_col.create_index("email", unique=True)
+    bank_accounts_col.create_index("user_id")
+    bank_accounts_col.create_index("iban", unique=True)
+    cards_col.create_index("user_id")
+    cards_col.create_index("card_number", unique=True)
+    api_keys_col.create_index("user_id")
+    api_keys_col.create_index("key", unique=True)
+
+
+def get_db():
+    """FastAPI dependency — returns the MongoDB database."""
+    return db

@@ -1,4 +1,4 @@
-"""Banking App — FastAPI entrypoint."""
+"""Banking App — FastAPI entrypoint (MongoDB)."""
 
 import os
 from pathlib import Path
@@ -37,22 +37,18 @@ def on_startup():
     """Init DB and seed demo data."""
     try:
         init_db()
-        print("[OK] SQLite database ready, tables created")
+        print("[OK] MongoDB ready, indexes created")
     except Exception as e:
         print(f"[WARN] DB init failed: {e}")
         return
 
-    from backend.database import SessionLocal
-    from backend.models.user import User
-    db = SessionLocal()
+    from backend.database import users_col
     try:
-        if db.query(User).count() == 0:
+        if users_col.count_documents({}) == 0:
             from backend.seed import run_seed
             run_seed()
     except Exception as e:
         print(f"[WARN] Seed failed: {e}")
-    finally:
-        db.close()
 
 
 # Pages

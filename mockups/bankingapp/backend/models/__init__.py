@@ -1,6 +1,8 @@
-"""Models package — import all models so SQLAlchemy sees them."""
+"""Models package — MongoDB doesn't need ORM models, but we keep
+collection name constants and document helpers here for clarity."""
 
-from backend.models.user import User                # noqa: F401
-from backend.models.bank_account import BankAccount  # noqa: F401
-from backend.models.card import Card                 # noqa: F401
-from backend.models.api_key import APIKey            # noqa: F401
+# Collection names (used in database.py)
+USERS = "users"
+BANK_ACCOUNTS = "bank_accounts"
+CARDS = "cards"
+API_KEYS = "api_keys"

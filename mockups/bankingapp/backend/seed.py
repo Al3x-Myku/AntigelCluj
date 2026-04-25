@@ -1,8 +1,7 @@
-"""Seed script — create 20 demo users with bank accounts, cards, and API keys."""
+"""Seed script — create 20 demo users with bank accounts, cards, and API keys (MongoDB)."""
 
 import os
 import sys
-import hashlib
 import secrets
 from datetime import datetime, timedelta
 
@@ -12,14 +11,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from passlib.context import CryptContext
-from backend.database import SessionLocal
-from backend.models.user import User
-from backend.models.bank_account import BankAccount
-from backend.models.card import Card
-from backend.models.api_key import APIKey
+from backend.database import users_col, bank_accounts_col, cards_col, api_keys_col
+from backend.models.user import make_user
+from backend.models.bank_account import make_bank_account
+from backend.models.card import make_card
+from backend.models.api_key import make_api_key
 
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 # ── 20 Demo Users ──────────────────────────────────────────────────────────
 DEMO_USERS = [
@@ -45,53 +43,44 @@ DEMO_USERS = [
     {"email": "admin@securbank.ro",           "password": "Admin!2026#",    "full_name": "Admin SecurBank",     "phone": "+40 740 000 000", "address": "Bd. Eroilor 1",              "city": "Cluj-Napoca"},
 ]
 
-
 def _iban(user_idx):
     """Generate a deterministic but realistic Romanian IBAN."""
-    # Format: RO + 2 check digits + 4 char bank code + 16 digit account
     bank_codes = ["RZSB", "BTRL", "BRDE", "INGB", "RNCB"]
     bank = bank_codes[user_idx % len(bank_codes)]
     acct = f"{1000000000000000 + user_idx * 7919:016d}"
     check = f"{50 + user_idx % 50:02d}"
     return f"RO{check}{bank}{acct}"
 
-
 def _card_number(user_idx, card_idx):
     """Generate a deterministic fake Visa/Mastercard number."""
-    prefix = "4532" if card_idx % 2 == 0 else "5412"  # Visa or MC
+    prefix = "4532" if card_idx % 2 == 0 else "5412"
     body = f"{(user_idx * 1000 + card_idx * 137 + 100000):012d}"[-12:]
     return f"{prefix} {body[:4]} {body[4:8]} {body[8:12]}"
-
 
 def _api_key():
     """Generate a random API key pair."""
     return f"sb_live_{secrets.token_hex(16)}", f"sk_{secrets.token_hex(32)}"
 
-
 def run_seed():
-    db = SessionLocal()
-
     for idx, u in enumerate(DEMO_USERS):
-        # Skip if user already exists
-        if db.query(User).filter(User.email == u["email"]).first():
+        if users_col.find_one({"email": u["email"]}):
             continue
 
         # ── Create User ──
-        user = User(
+        user_doc = make_user(
             email=u["email"],
             password_hash=pwd_ctx.hash(u["password"]),
             full_name=u["full_name"],
             phone=u["phone"],
             address=u["address"],
-            city=u["city"],
-            country="Romania",
+            city=u["city"]
         )
-        db.add(user)
-        db.flush()  # get user.id
+        result = users_col.insert_one(user_doc)
+        user_id = str(result.inserted_id)
 
-        # ── Create Bank Accounts (1-3 per user) ──
+        # ── Create Bank Accounts ──
         account_types = ["checking", "savings", "business"]
-        num_accounts = 1 + (idx % 3)  # 1, 2, or 3 accounts
+        num_accounts = 1 + (idx % 3)
         balances = [
             round(1500 + idx * 327.50 + 0.73, 2),
             round(8200 + idx * 1250.00 + 0.41, 2),
@@ -101,71 +90,67 @@ def run_seed():
 
         accounts = []
         for a_idx in range(num_accounts):
-            acct = BankAccount(
-                user_id=user.id,
+            acct_doc = make_bank_account(
+                user_id=user_id,
                 iban=_iban(idx * 3 + a_idx),
                 account_type=account_types[a_idx],
                 balance=balances[a_idx],
-                currency=currencies[a_idx] if a_idx < 2 else "RON",
+                currency=currencies[a_idx] if a_idx < 2 else "RON"
             )
-            db.add(acct)
-            db.flush()
-            accounts.append(acct)
+            acct_res = bank_accounts_col.insert_one(acct_doc)
+            accounts.append(str(acct_res.inserted_id))
 
-        # ── Create Cards (1 per account, some users get a virtual card too) ──
+        # ── Create Cards ──
         card_types = ["debit", "credit", "virtual"]
-        for c_idx, acct in enumerate(accounts):
-            card = Card(
-                user_id=user.id,
-                account_id=acct.id,
+        for c_idx, acct_id in enumerate(accounts):
+            card_doc = make_card(
+                user_id=user_id,
+                account_id=acct_id,
                 card_number=_card_number(idx, c_idx),
                 card_holder=u["full_name"].upper(),
                 expiry_date=f"{(idx % 12) + 1:02d}/{27 + c_idx % 3:02d}",
                 cvv=f"{100 + idx * 13 + c_idx * 7:03d}"[-3:],
                 card_type=card_types[c_idx % 3],
-                daily_limit=5000.0 + idx * 500.0,
+                daily_limit=5000.0 + idx * 500.0
             )
-            db.add(card)
+            cards_col.insert_one(card_doc)
 
-        # Extra virtual card for every 3rd user
+        # Extra virtual card
         if idx % 3 == 0 and accounts:
-            vcard = Card(
-                user_id=user.id,
-                account_id=accounts[0].id,
+            vcard_doc = make_card(
+                user_id=user_id,
+                account_id=accounts[0],
                 card_number=_card_number(idx, 99),
                 card_holder=u["full_name"].upper(),
                 expiry_date=f"{(idx % 12) + 1:02d}/28",
                 cvv=f"{900 + idx:03d}"[-3:],
                 card_type="virtual",
-                daily_limit=1000.0,
+                daily_limit=1000.0
             )
-            db.add(vcard)
+            cards_col.insert_one(vcard_doc)
 
-        # ── Create API Keys (0-2 per user) ──
+        # ── Create API Keys ──
         api_labels = [
             ("Mobile App", "read"),
             ("Trading Bot", "read+write"),
             ("Admin Dashboard", "full"),
         ]
-        num_keys = idx % 3  # 0, 1, or 2 keys
+        num_keys = idx % 3
         for k_idx in range(num_keys):
             key, secret = _api_key()
             label, perms = api_labels[k_idx]
-            api_key = APIKey(
-                user_id=user.id,
+            api_key_doc = make_api_key(
+                user_id=user_id,
                 key=key,
                 secret=secret,
                 label=label,
                 permissions=perms,
-                last_used=datetime.utcnow() - timedelta(hours=idx * 2 + k_idx),
+                last_used=datetime.utcnow() - timedelta(hours=idx * 2 + k_idx)
             )
-            db.add(api_key)
+            api_keys_col.insert_one(api_key_doc)
 
-    db.commit()
-    count = db.query(User).count()
+    count = users_col.count_documents({})
     print(f"[OK] Seeded {count} users with accounts, cards, and API keys")
-    db.close()
-
 
 if __name__ == "__main__":
     run_seed()
