@@ -44,11 +44,13 @@ from backend.routers.attack import router as attack_router
 from backend.routers.defense import router as defense_router
 from backend.routers.phish import router as phish_router
 from backend.routers.osint import router as osint_router
+from backend.routers.email_gateway import router as email_gateway_router
 
 app.include_router(attack_router, prefix="/api/attack", tags=["Attack (Red Team)"])
 app.include_router(defense_router, prefix="/api/defense", tags=["Defense (Blue Team)"])
 app.include_router(phish_router, tags=["Phishing Pages"])
 app.include_router(osint_router, prefix="/api/attack", tags=["OSINT Intelligence"])
+app.include_router(email_gateway_router, prefix="/api/defense", tags=["Email Defense"])
 
 
 # ─── Startup ─────────────────────────────────────────────────
@@ -112,6 +114,12 @@ async def defense_monitor():
 @app.get("/defense/lockdown", response_class=HTMLResponse)
 async def defense_lockdown():
     return FileResponse(str(FRONTEND_DIR / "defense" / "lockdown.html"))
+
+
+@app.get("/defense/email-scanner", response_class=HTMLResponse)
+@app.get("/defense/email-scanner/", response_class=HTMLResponse)
+async def defense_email_scanner():
+    return FileResponse(str(FRONTEND_DIR / "defense" / "email_scanner.html"))
 
 
 # ─── Health ──────────────────────────────────────────────────
