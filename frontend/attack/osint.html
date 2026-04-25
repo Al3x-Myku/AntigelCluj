@@ -99,9 +99,21 @@
                 <input id="scanCompany" type="text" placeholder="e.g. ING Bank Romania"
                        class="w-full bg-slate-900 border border-slate-700 rounded px-3 py-2 text-sm text-on-surface placeholder-slate-600 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-colors"/>
             </div>
-            <div class="flex items-end">
+            <div class="flex flex-col gap-2">
+                <!-- AI toggle -->
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <div class="relative">
+                        <input id="enableAI" type="checkbox" class="sr-only peer"/>
+                        <div class="w-9 h-5 bg-slate-700 rounded-full peer peer-checked:bg-purple-600 transition-colors"></div>
+                        <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
+                    </div>
+                    <span class="text-xs text-slate-400 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-purple-400">psychology</span>
+                        AI-Enhanced Search
+                    </span>
+                </label>
                 <button id="btnScan" onclick="startScan()"
-                        class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded transition-all duration-200 active:scale-95">
+                        class="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-sm rounded transition-all duration-200 active:scale-95">
                     <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
                     <span>Launch Recon</span>
                 </button>
@@ -183,6 +195,12 @@
                             <th class="px-4 py-2 font-medium">Risk</th>
                             <th class="px-4 py-2 font-medium">Conf</th>
                             <th class="px-4 py-2 font-medium">Source</th>
+                            <th class="px-4 py-2 font-medium">
+                                <span class="flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[12px] text-purple-400">psychology</span>
+                                    AI Notes
+                                </span>
+                            </th>
                         </tr>
                     </thead>
                     <tbody id="resultsBody" class="divide-y divide-slate-800/50">
@@ -249,7 +267,11 @@ async function startScan() {
         const resp = await fetch(`${API}/scan`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ domain, company_name: company }),
+            body: JSON.stringify({
+                domain,
+                company_name: company,
+                enable_ai: document.getElementById('enableAI').checked,
+            }),
         });
         const data = await resp.json();
         currentScanId = data.scan_id;
@@ -358,6 +380,7 @@ function renderResults(results) {
             <td class="px-4 py-2"><div class="flex flex-col items-start gap-0.5"><span class="${riskColor} font-mono font-bold">${(r.risk_score * 100).toFixed(0)}%</span>${riskBar}</div></td>
             <td class="px-4 py-2 ${confColor} font-mono">${(r.confidence * 100).toFixed(0)}%</td>
             <td class="px-4 py-2 text-slate-600 truncate max-w-[150px]" title="${escapeHtml(r.source_url || '')}">${escapeHtml(source)}</td>
+            <td class="px-4 py-2 text-slate-400 text-[10px] max-w-[200px]">${r.ai_summary ? `<span class="flex items-start gap-1"><span class="material-symbols-outlined text-[11px] text-purple-400 mt-0.5 flex-shrink-0">psychology</span><span title="${escapeHtml(r.ai_summary)}">${escapeHtml(r.ai_summary.length > 80 ? r.ai_summary.substring(0, 80) + '…' : r.ai_summary)}</span></span>` : '<span class="text-slate-700">—</span>'}</td>
         </tr>`;
     }).join('');
 }

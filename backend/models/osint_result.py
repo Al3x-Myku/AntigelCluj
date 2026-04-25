@@ -54,6 +54,7 @@ class OsintResult(Base):
     source_url = Column(Text, nullable=True)
     confidence = Column(Float, default=0.5)  # 0.0-1.0
     risk_score = Column(Float, default=0.5)  # 0.0-1.0
+    ai_summary = Column(Text, nullable=True)   # AI-generated enrichment summary
     scraped_at = Column(DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -72,5 +73,6 @@ class OsintResult(Base):
             "source_url": self.source_url,
             "confidence": round(self.confidence, 2),
             "risk_score": round(self.risk_score, 2),
+            "ai_summary": self.ai_summary or "",
             "scraped_at": self.scraped_at.isoformat() if self.scraped_at else None,
         }

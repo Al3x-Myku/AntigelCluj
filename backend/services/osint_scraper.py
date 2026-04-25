@@ -2,9 +2,15 @@
 
 Scrapes public company pages, directories, and search-indexed content
 to discover contact information (emails, phone numbers) for phishing campaign targeting.
+
+Enhanced with:
+  - Deep Google search for companies and individual targets
+  - AI-powered target enrichment via Google Gemini API
 """
 
+import os
 import re
+import json
 import time
 import random
 import logging
@@ -85,10 +91,17 @@ SKIP_DOMAINS = {
 class OsintScanner:
     """Autonomous OSINT scanner that discovers emails and phones from public sources."""
 
-    def __init__(self, domain: str, company_name: str = "", scan_id: str = ""):
+    # Maximum number of individuals to run deep-search on (keeps scan time reasonable)
+    MAX_INDIVIDUALS_TO_SEARCH: int = 10
+    # Maximum number of contacts to enrich via AI (controls API cost)
+    MAX_AI_ENRICHMENTS: int = 15
+
+    def __init__(self, domain: str, company_name: str = "", scan_id: str = "",
+                 enable_ai: bool = False):
         self.domain = domain.lower().strip()
         self.company_name = company_name or self.domain.split(".")[0].title()
         self.scan_id = scan_id
+        self.enable_ai = enable_ai
         self.session = requests.Session()
         self.session.headers.update({
             "User-Agent": random.choice(USER_AGENTS),
@@ -380,6 +393,236 @@ class OsintScanner:
                 self._log(f"  ✓ Social page: {urlparse(url).netloc}")
                 self._process_page(html, url)
 
+    # ─── Deep Google Search (Company) ────────────────────────
+
+    def scan_google_deep_company(self):
+        """Deep Google search for company-specific intelligence — filetypes, leaks, and job data."""
+        self._log(f"🏢 Deep Google search for company: {self.company_name}")
+        dorks = [
+            # Document leaks
+            f'site:{self.domain} filetype:xls OR filetype:xlsx OR filetype:csv',
+            f'site:{self.domain} filetype:doc OR filetype:docx OR filetype:pdf',
+            f'"{self.company_name}" filetype:pdf employees OR staff OR directory',
+            # Exposed credentials / configs
+            f'site:{self.domain} inurl:admin OR inurl:login OR inurl:portal',
+            f'site:{self.domain} "index of" OR inurl:"/backup" OR inurl:"/dump"',
+            # Job postings → reveal org structure and tech stack
+            f'site:linkedin.com/jobs "{self.company_name}" OR "{self.domain}"',
+            f'site:indeed.com OR site:glassdoor.com "{self.company_name}"',
+            # Email pattern discovery from external mentions
+            f'"{self.company_name}" "@{self.domain}" email contact',
+            f'pastebin.com OR paste.ee OR hastebin.com "@{self.domain}"',
+            # GitHub leaks
+            f'site:github.com "{self.domain}" OR "{self.company_name}" email',
+            # Romanian-specific business registries
+            f'site:anaf.ro OR site:listafirme.ro "{self.company_name}"',
+        ]
+        for dork in dorks:
+            self._delay()
+            try:
+                url = f"https://www.google.com/search?q={requests.utils.quote(dork)}&num=20"
+                html = self._fetch(url, timeout=10)
+                if html:
+                    self._log(f"  ✓ Deep company dork: {dork[:60]}...")
+                    soup = BeautifulSoup(html, "lxml")
+                    text = soup.get_text(" ", strip=True)
+                    emails = self._extract_emails(text, url)
+                    if emails:
+                        self._log(f"    Found {len(emails)} emails via deep company search")
+                        for email in emails:
+                            self.results.append(self._build_result(
+                                email=email,
+                                source_url="Deep Google — Company",
+                                context_text=text[:500],
+                            ))
+                    # Follow external links that contain our domain
+                    for a in soup.find_all("a", href=True):
+                        href = a["href"]
+                        if self.domain in href and href.startswith("http"):
+                            parsed = urlparse(href)
+                            clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                            if clean not in self._visited_urls:
+                                page_html = self._fetch(clean, timeout=8)
+                                if page_html:
+                                    self._process_page(page_html, clean)
+                                    self._delay()
+                else:
+                    self._log(f"  ✗ No results: {dork[:60]}...")
+            except Exception as e:
+                self._log(f"  ✗ Deep company dork error: {str(e)[:60]}")
+
+    # ─── Deep Google Search (Individuals) ────────────────────
+
+    def scan_google_deep_individuals(self):
+        """Search Google for each discovered individual — look for personal data and profiles."""
+        # Collect unique full names we've discovered so far
+        people: Dict[str, str] = {}  # "First Last" → email
+        for r in self.results:
+            first = (r.get("first_name") or "").strip()
+            last = (r.get("last_name") or "").strip()
+            email = r.get("email") or ""
+            if first and last:
+                full_name = f"{first} {last}"
+                if full_name not in people:
+                    people[full_name] = email
+
+        if not people:
+            self._log("👤 No named individuals found yet — skipping individual deep search")
+            return
+
+        self._log(f"👤 Deep Google search for {len(people)} individuals")
+        for full_name, email in list(people.items())[:self.MAX_INDIVIDUALS_TO_SEARCH]:  # cap to stay reasonable
+            self._delay()
+            dorks = [
+                f'"{full_name}" "{self.company_name}" email OR phone OR contact',
+                f'"{full_name}" site:linkedin.com',
+                f'"{full_name}" "{self.domain}" resume OR CV OR profile',
+                f'"{full_name}" "@{self.domain}"',
+            ]
+            for dork in dorks:
+                self._delay()
+                try:
+                    url = f"https://www.google.com/search?q={requests.utils.quote(dork)}&num=10"
+                    html = self._fetch(url, timeout=10)
+                    if html:
+                        soup = BeautifulSoup(html, "lxml")
+                        text = soup.get_text(" ", strip=True)
+                        new_emails = self._extract_emails(text, url)
+                        new_phones = self._extract_phones(text)
+                        if new_emails:
+                            self._log(f"  ✓ Individual hit for '{full_name}': {len(new_emails)} email(s)")
+                            for em in new_emails:
+                                self.results.append(self._build_result(
+                                    email=em,
+                                    source_url=f"Deep Google — Individual ({full_name})",
+                                    context_text=text[:500],
+                                ))
+                        if new_phones:
+                            self._log(f"  ✓ Individual phone hit for '{full_name}': {len(new_phones)} phone(s)")
+                            for ph in new_phones:
+                                if not any(r.get("phone") == ph for r in self.results):
+                                    r_data = self._build_result(
+                                        phone=ph,
+                                        source_url=f"Deep Google — Individual ({full_name})",
+                                        context_text=text[:500],
+                                    )
+                                    # Carry known name forward (split on first space: first vs rest)
+                                    parts = full_name.split(" ", 1)
+                                    r_data["first_name"] = parts[0]
+                                    r_data["last_name"] = parts[1] if len(parts) > 1 else ""
+                                    self.results.append(r_data)
+                except Exception as e:
+                    self._log(f"  ✗ Individual dork error for '{full_name}': {str(e)[:60]}")
+
+    # ─── AI-Powered Search & Enrichment ──────────────────────
+
+    def scan_ai_search(self):
+        """Use Gemini to generate targeted search queries and enrich discovered contacts."""
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if not api_key:
+            self._log("🤖 AI search skipped — GEMINI_API_KEY not configured")
+            return
+
+        try:
+            import google.generativeai as genai  # lazy import
+            genai.configure(api_key=api_key)
+            model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+            client = genai.GenerativeModel(model)
+        except ImportError:
+            self._log("🤖 AI search skipped — google-generativeai package not installed")
+            return
+        except Exception as e:
+            self._log(f"🤖 AI client init error: {str(e)[:80]}")
+            return
+
+        self._log(f"🤖 Running AI search & enrichment (model: {model})")
+
+        # ── Step 1: Generate extra search queries ──────────────
+        self._ai_generate_queries(client, model)
+
+        # ── Step 2: Enrich already-discovered contacts ─────────
+        self._ai_enrich_contacts(client, model)
+
+    def _ai_generate_queries(self, client, model: str):
+        """Ask the AI to suggest additional search dorks / queries for this target."""
+        try:
+            prompt = (
+                f"You are an OSINT analyst. Given the following target, suggest 5 specific "
+                f"Google search queries (dorks) to discover employee emails, phone numbers, "
+                f"or leaked data. Reply ONLY with a JSON array of query strings.\n\n"
+                f"Target company: {self.company_name}\n"
+                f"Target domain: {self.domain}\n"
+                f"Emails found so far: {len(self.found_emails)}\n"
+                f"Example output: [\"query1\", \"query2\", ...]"
+            )
+            response = client.generate_content(prompt)
+            raw = response.text.strip()
+            # Parse the JSON array (strip markdown fences if present)
+            raw = re.sub(r"^```[a-z]*\n?", "", raw).rstrip("`").strip()
+            queries = json.loads(raw) if raw.startswith("[") else []
+            if isinstance(queries, list):
+                self._log(f"  🤖 AI suggested {len(queries)} extra queries")
+                for q in queries[:5]:
+                    if isinstance(q, str) and len(q) < 200:
+                        self._delay()
+                        try:
+                            url = f"https://www.google.com/search?q={requests.utils.quote(q)}&num=15"
+                            html = self._fetch(url, timeout=10)
+                            if html:
+                                soup = BeautifulSoup(html, "lxml")
+                                text = soup.get_text(" ", strip=True)
+                                emails = self._extract_emails(text, url)
+                                if emails:
+                                    self._log(f"    AI query found {len(emails)} emails: {q[:50]}...")
+                                    for em in emails:
+                                        self.results.append(self._build_result(
+                                            email=em,
+                                            source_url="AI-Generated Search Query",
+                                            context_text=text[:500],
+                                        ))
+                        except Exception as e:
+                            self._log(f"    AI query error: {str(e)[:60]}")
+        except Exception as e:
+            self._log(f"  🤖 AI query generation error: {str(e)[:80]}")
+
+    def _ai_enrich_contacts(self, client, model: str):
+        """Use AI to enrich each unique discovered contact with a brief profile summary."""
+        # Only enrich contacts that have both email and a name
+        to_enrich = [
+            r for r in self.results
+            if r.get("email") and (r.get("first_name") or r.get("last_name"))
+        ][:self.MAX_AI_ENRICHMENTS]  # cap to control API cost
+
+        if not to_enrich:
+            self._log("  🤖 No named contacts to enrich")
+            return
+
+        self._log(f"  🤖 AI enriching {len(to_enrich)} named contacts...")
+        for r in to_enrich:
+            name = f"{r.get('first_name', '')} {r.get('last_name', '')}".strip()
+            email = r.get("email", "")
+            dept = r.get("department", "")
+            try:
+                prompt = (
+                    f"You are a security researcher building an OSINT profile. "
+                    f"Given this employee, provide a 1-2 sentence summary of likely "
+                    f"responsibilities, potential phishing attack vectors, and publicly "
+                    f"available information (e.g., LinkedIn presence, role seniority). "
+                    f"Be concise and factual.\n\n"
+                    f"Name: {name}\nEmail: {email}\nCompany: {self.company_name}\n"
+                    f"Department: {dept}\n\n"
+                    f"Reply with ONLY the summary text, no JSON."
+                )
+                resp = client.generate_content(prompt)
+                summary = resp.text.strip()
+                r["ai_summary"] = summary
+            except Exception as e:
+                self._log(f"    AI enrichment error for {email}: {str(e)[:60]}")
+                continue
+
+        enriched = sum(1 for r in to_enrich if r.get("ai_summary"))
+        self._log(f"  🤖 AI enrichment complete: {enriched}/{len(to_enrich)} contacts enriched")
+
     def _process_page(self, html: str, source_url: str):
         """Extract emails and phones from raw HTML."""
         try:
@@ -407,6 +650,8 @@ class OsintScanner:
         """Execute full OSINT scan. Returns summary dict."""
         start = time.time()
         self._log(f"═══ OSINT RECON STARTED: {self.company_name} ({self.domain}) ═══")
+        if self.enable_ai:
+            self._log("🤖 AI-enhanced mode enabled")
 
         try:
             self.scan_main_site()
@@ -415,6 +660,12 @@ class OsintScanner:
             self.scan_public_directories()
             self.scan_email_patterns()
             self.scan_social_media()
+            # ── Enhanced: deeper searches ──────────────────────
+            self.scan_google_deep_company()
+            self.scan_google_deep_individuals()
+            # ── AI enrichment (only when key is configured) ───
+            if self.enable_ai:
+                self.scan_ai_search()
         except Exception as e:
             self._log(f"✗ Scan error: {str(e)}")
 
@@ -437,14 +688,16 @@ class OsintScanner:
 
 # ─── Background Runner ──────────────────────────────────────
 
-def run_osint_scan_background(scan_id: str, domain: str, company_name: str):
+def run_osint_scan_background(scan_id: str, domain: str, company_name: str,
+                              enable_ai: bool = False):
     """Run OSINT scan in background thread and save results to DB."""
     import warnings
     warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 
     db = SessionLocal()
     try:
-        scanner = OsintScanner(domain=domain, company_name=company_name, scan_id=scan_id)
+        scanner = OsintScanner(domain=domain, company_name=company_name, scan_id=scan_id,
+                                enable_ai=enable_ai)
         result = scanner.run()
 
         # Save results
@@ -472,6 +725,7 @@ def run_osint_scan_background(scan_id: str, domain: str, company_name: str):
                     source_url=r.get("source_url", ""),
                     confidence=r.get("confidence", 0.5),
                     risk_score=r.get("risk_score", 0.5),
+                    ai_summary=r.get("ai_summary", ""),
                 )
                 db.add(osint_result)
             db.commit()
@@ -489,7 +743,8 @@ def run_osint_scan_background(scan_id: str, domain: str, company_name: str):
         db.close()
 
 
-def start_osint_scan(domain: str, company_name: str = "") -> str:
+def start_osint_scan(domain: str, company_name: str = "",
+                     enable_ai: bool = False) -> str:
     """Start an OSINT scan in a background thread. Returns scan_id."""
     db = SessionLocal()
     try:
@@ -506,6 +761,7 @@ def start_osint_scan(domain: str, company_name: str = "") -> str:
         thread = threading.Thread(
             target=run_osint_scan_background,
             args=(scan_id, domain, company_name or domain.split(".")[0].title()),
+            kwargs={"enable_ai": enable_ai},
             daemon=True,
         )
         thread.start()
