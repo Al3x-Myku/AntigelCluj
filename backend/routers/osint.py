@@ -17,6 +17,7 @@ router = APIRouter()
 class ScanRequest(BaseModel):
     domain: str
     company_name: Optional[str] = ""
+    enable_ai: Optional[bool] = False
 
 
 class GenerateCampaignRequest(BaseModel):
@@ -34,9 +35,10 @@ async def start_scan(req: ScanRequest, db: Session = Depends(get_db)):
         raise HTTPException(400, "Invalid domain (e.g., 'example.com')")
 
     from backend.services.osint_scraper import start_osint_scan
-    scan_id = start_osint_scan(domain, req.company_name or "")
+    scan_id = start_osint_scan(domain, req.company_name or "", enable_ai=req.enable_ai or False)
 
-    return {"status": "started", "scan_id": scan_id, "domain": domain}
+    return {"status": "started", "scan_id": scan_id, "domain": domain,
+            "ai_enabled": req.enable_ai or False}
 
 
 # ─── List All Scans ──────────────────────────────────────────

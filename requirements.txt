@@ -36,3 +36,6 @@ faker==28.4.1
 # OSINT Scraping
 beautifulsoup4==4.12.3
 lxml==5.3.0
+
+# AI Search
+openai==1.109.1
