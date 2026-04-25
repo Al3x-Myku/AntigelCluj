@@ -121,6 +121,43 @@
         </div>
     </div>
 
+    <!-- Social Media Search -->
+    <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="material-symbols-outlined text-purple-400">share</span>
+            <h2 class="text-lg font-semibold text-on-surface">Social Media Deep Search</h2>
+            <span class="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 ml-2">NEW</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-4">Targeted Google dork searches across social platforms to discover employee contacts, developer emails, and business profiles.</p>
+        <div class="flex flex-wrap gap-3 mb-4">
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-colors select-none">
+                <input type="checkbox" class="media-platform accent-purple-500" value="linkedin" checked/>
+                <span class="text-sm">🔗 LinkedIn</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-colors select-none">
+                <input type="checkbox" class="media-platform accent-purple-500" value="github" checked/>
+                <span class="text-sm">🐙 GitHub</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-colors select-none">
+                <input type="checkbox" class="media-platform accent-purple-500" value="facebook" checked/>
+                <span class="text-sm">📘 Facebook</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-colors select-none">
+                <input type="checkbox" class="media-platform accent-purple-500" value="instagram"/>
+                <span class="text-sm">📸 Instagram</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer px-3 py-2 rounded border border-slate-700 bg-slate-900 hover:border-purple-500/50 transition-colors select-none">
+                <input type="checkbox" class="media-platform accent-purple-500" value="twitter"/>
+                <span class="text-sm">🐦 Twitter/X</span>
+            </label>
+        </div>
+        <button id="btnMediaScan" onclick="startMediaScan()"
+                class="flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-semibold text-sm rounded transition-all duration-200 active:scale-95">
+            <span class="material-symbols-outlined text-[18px]">public</span>
+            <span>Launch Media Search</span>
+        </button>
+    </div>
+
     <!-- Stats Cards -->
     <div id="statsSection" class="hidden">
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -289,6 +326,59 @@ async function startScan() {
     }
 }
 
+// ─── Start Media Search ──────────────────────
+async function startMediaScan() {
+    const domain = document.getElementById('scanDomain').value.trim();
+    if (!domain || !domain.includes('.')) {
+        alert('Please enter a target domain above first (e.g., example.com)');
+        return;
+    }
+    const company = document.getElementById('scanCompany').value.trim();
+    const checkboxes = document.querySelectorAll('.media-platform:checked');
+    const platforms = Array.from(checkboxes).map(cb => cb.value);
+    if (platforms.length === 0) {
+        alert('Select at least one social media platform');
+        return;
+    }
+
+    const btn = document.getElementById('btnMediaScan');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">progress_activity</span><span>Searching...</span>';
+
+    // Show panels
+    document.getElementById('statsSection').classList.remove('hidden');
+    document.getElementById('logSection').classList.remove('hidden');
+    document.getElementById('resultsSection').classList.remove('hidden');
+    document.getElementById('logPulse').classList.remove('hidden');
+    document.getElementById('statStatus').textContent = 'MEDIA SCAN';
+    document.getElementById('statStatus').className = 'text-lg font-bold text-purple-400 animate-pulse';
+    document.getElementById('logFeed').innerHTML = '<div class="text-purple-400">▶ Media search: ' + platforms.join(', ') + ' for ' + domain + '...</div>';
+
+    try {
+        const resp = await fetch(`${API}/media-search`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                domain,
+                company_name: company,
+                platforms,
+                enable_ai: document.getElementById('enableAI').checked,
+            }),
+        });
+        const data = await resp.json();
+        currentScanId = data.scan_id;
+
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollResults, 2000);
+        pollResults();
+    } catch (e) {
+        console.error(e);
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">public</span><span>Launch Media Search</span>';
+        alert('Media search failed: ' + e.message);
+    }
+}
+
 // ─── Poll Results ────────────────────────────
 async function pollResults() {
     if (!currentScanId) return;
@@ -332,6 +422,12 @@ async function pollResults() {
             btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">rocket_launch</span><span>Launch Recon</span>';
             btn.classList.remove('scan-active');
             document.getElementById('logPulse').classList.add('hidden');
+            // Reset media scan button too
+            const mediaBtn = document.getElementById('btnMediaScan');
+            if (mediaBtn) {
+                mediaBtn.disabled = false;
+                mediaBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">public</span><span>Launch Media Search</span>';
+            }
 
             if (scan.status === 'completed') {
                 document.getElementById('statStatus').textContent = 'COMPLETE';

@@ -104,3 +104,45 @@ async def generate_campaign(req: GenerateCampaignRequest, db: Session = Depends(
         raise HTTPException(400, str(e))
     except Exception as e:
         raise HTTPException(500, f"Campaign generation failed: {str(e)}")
+
+
+class MediaSearchRequest(BaseModel):
+    domain: str
+    company_name: Optional[str] = ""
+    platforms: Optional[list] = None  # e.g. ["linkedin", "facebook", "github"]
+    enable_ai: Optional[bool] = False
+
+
+@router.post("/osint/media-search")
+async def media_search(req: MediaSearchRequest, db: Session = Depends(get_db)):
+    """Start an OSINT scan focused on social media platforms.
+
+    Accepts a list of platforms to search: linkedin, facebook, github, instagram, twitter.
+    Defaults to all platforms if not specified.
+    """
+    domain = req.domain.strip().lower()
+    if not domain or "." not in domain:
+        raise HTTPException(400, "Invalid domain (e.g., 'example.com')")
+
+    platforms = req.platforms or ["linkedin", "facebook", "github", "instagram", "twitter"]
+    valid = {"linkedin", "facebook", "github", "instagram", "twitter"}
+    platforms = [p.lower() for p in platforms if p.lower() in valid]
+
+    if not platforms:
+        raise HTTPException(400, "No valid platforms selected")
+
+    from backend.services.osint_scraper import start_osint_scan_media
+    scan_id = start_osint_scan_media(
+        domain=domain,
+        company_name=req.company_name or "",
+        platforms=platforms,
+        enable_ai=req.enable_ai or False,
+    )
+
+    return {
+        "status": "started",
+        "scan_id": scan_id,
+        "domain": domain,
+        "platforms": platforms,
+        "ai_enabled": req.enable_ai or False,
+    }
