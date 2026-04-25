@@ -112,6 +112,14 @@ def _apply_ban(key_suffix: str, ban_type: str, ip: str, username: str = None):
     return ban_info
 
 
+def apply_explicit_ban(ip: str, reason: str, username: str = None):
+    """Directly ban an IP (and optionally user) e.g., for direct fraud detection."""
+    ban_info = _apply_ban(f"ip:{ip}", "hard", ip, username)
+    if username:
+        _apply_ban(f"user:{username}", "hard", ip, username)
+    return ban_info
+
+
 def check_ban(ip: str, username: str = None) -> dict | None:
     """Check if an IP or username is currently banned."""
     now = time.time()
