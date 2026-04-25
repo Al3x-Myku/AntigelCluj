@@ -10,6 +10,7 @@ Enhanced with:
 
 import os
 import re
+import json
 import time
 import random
 import logging
@@ -89,6 +90,11 @@ SKIP_DOMAINS = {
 
 class OsintScanner:
     """Autonomous OSINT scanner that discovers emails and phones from public sources."""
+
+    # Maximum number of individuals to run deep-search on (keeps scan time reasonable)
+    MAX_INDIVIDUALS_TO_SEARCH: int = 10
+    # Maximum number of contacts to enrich via AI (controls API cost)
+    MAX_AI_ENRICHMENTS: int = 15
 
     def __init__(self, domain: str, company_name: str = "", scan_id: str = "",
                  enable_ai: bool = False):
@@ -465,7 +471,7 @@ class OsintScanner:
             return
 
         self._log(f"👤 Deep Google search for {len(people)} individuals")
-        for full_name, email in list(people.items())[:10]:  # cap at 10 to stay reasonable
+        for full_name, email in list(people.items())[:self.MAX_INDIVIDUALS_TO_SEARCH]:  # cap to stay reasonable
             self._delay()
             dorks = [
                 f'"{full_name}" "{self.company_name}" email OR phone OR contact',
@@ -500,10 +506,10 @@ class OsintScanner:
                                         source_url=f"Deep Google — Individual ({full_name})",
                                         context_text=text[:500],
                                     )
-                                    # Carry known name forward
-                                    fn, ln = full_name.split(" ", 1) if " " in full_name else (full_name, "")
-                                    r_data["first_name"] = fn
-                                    r_data["last_name"] = ln
+                                    # Carry known name forward (split on first space: first vs rest)
+                                    parts = full_name.split(" ", 1)
+                                    r_data["first_name"] = parts[0]
+                                    r_data["last_name"] = parts[1] if len(parts) > 1 else ""
                                     self.results.append(r_data)
                 except Exception as e:
                     self._log(f"  ✗ Individual dork error for '{full_name}': {str(e)[:60]}")
@@ -556,7 +562,6 @@ class OsintScanner:
             )
             raw = response.choices[0].message.content.strip()
             # Parse the JSON array
-            import json
             queries = json.loads(raw) if raw.startswith("[") else []
             if isinstance(queries, list):
                 self._log(f"  🤖 AI suggested {len(queries)} extra queries")
@@ -585,12 +590,11 @@ class OsintScanner:
 
     def _ai_enrich_contacts(self, client, model: str):
         """Use AI to enrich each unique discovered contact with a brief profile summary."""
-        import json
         # Only enrich contacts that have both email and a name
         to_enrich = [
             r for r in self.results
             if r.get("email") and (r.get("first_name") or r.get("last_name"))
-        ][:15]  # cap at 15 to control API cost
+        ][:self.MAX_AI_ENRICHMENTS]  # cap to control API cost
 
         if not to_enrich:
             self._log("  🤖 No named contacts to enrich")
