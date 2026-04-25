@@ -115,7 +115,7 @@ async def simulate_login(
     now = datetime.utcnow()
 
     if is_attack:
-        # Suspicious login
+        # Suspicious login - make it very unusual so Mahalanobis catches it clearly
         attacker_ips = ["45.33.32.156", "185.220.101.1", "91.219.237.42"]
         evt = LoginEvent(
             account_id=account.id,
@@ -123,7 +123,7 @@ async def simulate_login(
             ip_address=random.choice(attacker_ips),
             timestamp=now,
             success=random.choice([True, False]),
-            hour_of_day=round(random.uniform(1, 5), 2),
+            hour_of_day=round(random.uniform(2, 4), 2), # 2-4 AM offset heavily penalized
             day_of_week=float(random.choice([5, 6])),
             login_failures_last_hour=float(random.randint(4, 12)),
             ip_is_new=1.0,
@@ -136,20 +136,20 @@ async def simulate_login(
             city=random.choice(["Moscow", "Beijing", "Lagos"]),
         )
     else:
-        # Normal login
+        # Normal login - tightly aligned with our synthetic generator (9 AM or 1:30 PM, clean metrics)
         evt = LoginEvent(
             account_id=account.id,
             username=account.username,
             ip_address=account.usual_ip or "192.168.1.10",
             timestamp=now,
-            success=True,
-            hour_of_day=round(float(now.hour) + random.uniform(-0.5, 0.5), 2),
-            day_of_week=float(now.weekday()),
+            success=True, # Normal is almost always successful
+            hour_of_day=round(random.choice([9.0, 13.5]) + random.uniform(-0.2, 0.2), 2),
+            day_of_week=float(now.weekday() % 5), # 0-4 weekday
             login_failures_last_hour=0.0,
             ip_is_new=0.0,
             device_is_new=0.0,
             geo_distance_km=round(random.uniform(0, 5), 2),
-            time_since_last_login_hrs=round(random.uniform(2, 12), 2),
+            time_since_last_login_hrs=round(random.uniform(12, 24), 2),
             typing_speed_ms=round(random.gauss(100, 10), 2),
             device_fingerprint=f"dev-{account.id}-main",
             country="Romania",
@@ -161,10 +161,15 @@ async def simulate_login(
     evt.anomaly_score = score
     evt.is_anomalous = is_anom
 
-    # Rate limit check (if failed)
+    # Ban Logic / Rate Limiting
     ban_info = None
     if not evt.success:
+        # Basic rate limiter catch for failures
         ban_info = rate_limiter.record_failure(evt.ip_address, evt.username)
+
+    # Auto-ban IP definitively if fraudulent anomaly detected
+    if is_anom:
+        ban_info = rate_limiter.apply_explicit_ban(evt.ip_address, "Fraudulent Anomaly Detected")
 
     db.add(evt)
     db.commit()
@@ -174,17 +179,17 @@ async def simulate_login(
     if ban_info:
         result["ban_triggered"] = ban_info
 
-    # Auto-lockdown if anomalous
+    # Auto-lockdown account if anomalous
     if is_anom:
-        # 0.2 represents a reasonable high-confidence margin for the Isolation Forest
+        # 0.2 represents a reasonable high-confidence margin
         threshold = anomaly_detector.get_threshold() + 0.2
         if score > threshold:
             if AUTO_LOCKDOWN_ENABLED:
                 execute_lockdown(db, account.id, triggered_by="auto-response")
                 result["auto_lockdown_triggered"] = True
-                result["auto_lockdown_warning"] = f"Account locked. Scope {score} exceeds Auto-response threshold {threshold}"
+                result["auto_lockdown_warning"] = f"Account locked. Score {score} exceeds Auto-response threshold {threshold}. IP banned."
             else:
-                result["auto_lockdown_warning"] = f"Anomaly score {score}. Enable Auto-lockdown to block this."
+                result["auto_lockdown_warning"] = f"Anomaly score {score}. IP banned. Enable Auto-lockdown to lock account as well."
 
     return result
 
