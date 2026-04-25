@@ -1,186 +1,130 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BreezeTech — Smart Climate Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>BreezeTech — Conectare</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             min-height: 100vh;
-            background: #f0f4f8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ── Layout: two-column split ── */
-        .login-wrapper {
-            display: flex;
-            width: 960px;
-            max-width: 95vw;
-            min-height: 580px;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
-        }
-
-        /* ── Left panel: branding ── */
-        .brand-panel {
-            flex: 1;
-            background: linear-gradient(145deg, #0d9488, #0f766e, #115e59);
-            color: #fff;
-            padding: 48px 40px;
+            background: #f5f7fa;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
         }
 
-        .brand-panel::before {
-            content: '';
-            position: absolute;
-            top: -80px; right: -80px;
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.06);
-        }
-
-        .brand-panel::after {
-            content: '';
-            position: absolute;
-            bottom: -100px; left: -60px;
-            width: 320px; height: 320px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.04);
-        }
-
-        .brand-logo {
+        /* ── Top navbar ── */
+        .navbar {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+            height: 56px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 40px;
-            position: relative;
-            z-index: 1;
+            justify-content: space-between;
         }
 
-        .brand-logo .icon {
-            width: 44px; height: 44px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 12px;
+        .navbar .brand {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #1a1a1a;
         }
 
-        .brand-logo .icon svg {
-            width: 24px; height: 24px;
-            fill: #fff;
+        .navbar .brand svg {
+            width: 28px;
+            height: 28px;
+            color: #0891b2;
         }
 
-        .brand-logo span {
-            font-size: 22px;
+        .navbar .brand-name {
+            font-size: 17px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            color: #0e7490;
+            letter-spacing: -0.3px;
         }
 
-        .brand-panel h2 {
-            font-size: 28px;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 16px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-panel p {
-            font-size: 15px;
-            line-height: 1.6;
-            opacity: 0.8;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-features {
-            margin-top: 36px;
+        .navbar .nav-links {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-features .feat {
-            display: flex;
+            gap: 24px;
             align-items: center;
-            gap: 12px;
-            font-size: 14px;
+        }
+
+        .navbar .nav-links a {
+            font-size: 13px;
+            color: #64748b;
+            text-decoration: none;
             font-weight: 500;
         }
 
-        .brand-features .feat .dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: #5eead4;
-            flex-shrink: 0;
+        .navbar .nav-links a:hover {
+            color: #0e7490;
         }
 
-        /* ── Right panel: form ── */
-        .form-panel {
+        /* ── Main content ── */
+        .main {
             flex: 1;
-            background: #fff;
-            padding: 48px 44px;
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
+            padding: 40px 20px;
         }
 
-        .form-panel h1 {
-            font-size: 24px;
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 36px 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+        }
+
+        .login-card h1 {
+            font-size: 20px;
             font-weight: 700;
             color: #111827;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
-        .form-panel .subtitle {
-            font-size: 14px;
+        .login-card .subtitle {
+            font-size: 13px;
             color: #6b7280;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
 
+        /* ── Form ── */
         .field {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .field label {
             display: block;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 500;
             color: #374151;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         .field input {
             width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #d1d5db;
-            border-radius: 10px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
             font-family: inherit;
             font-size: 14px;
             color: #111827;
-            background: #f9fafb;
-            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
             outline: none;
         }
 
         .field input:focus {
-            border-color: #0d9488;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+            border-color: #0891b2;
+            box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
         }
 
         .field input::placeholder { color: #9ca3af; }
@@ -189,14 +133,15 @@
             position: relative;
         }
 
-        .password-wrapper input { padding-right: 44px; }
+        .password-wrapper input { padding-right: 40px; }
 
         .toggle-pw {
             position: absolute;
-            right: 12px; top: 50%; transform: translateY(-50%);
+            right: 10px; top: 50%; transform: translateY(-50%);
             background: none; border: none;
             cursor: pointer; color: #9ca3af;
             display: flex; align-items: center;
+            padding: 2px;
         }
 
         .toggle-pw:hover { color: #6b7280; }
@@ -205,7 +150,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
             font-size: 13px;
         }
 
@@ -215,15 +160,16 @@
             gap: 6px;
             color: #4b5563;
             cursor: pointer;
+            font-weight: 400;
         }
 
         .form-options label input[type="checkbox"] {
-            accent-color: #0d9488;
-            width: 15px; height: 15px;
+            accent-color: #0891b2;
+            width: 14px; height: 14px;
         }
 
         .form-options a {
-            color: #0d9488;
+            color: #0891b2;
             text-decoration: none;
             font-weight: 500;
         }
@@ -232,34 +178,35 @@
 
         .btn-login {
             width: 100%;
-            padding: 13px;
-            background: #0d9488;
+            padding: 11px;
+            background: #0891b2;
             color: #fff;
             border: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-family: inherit;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+            transition: background 0.15s;
         }
 
-        .btn-login:hover { background: #0f766e; }
-        .btn-login:active { transform: scale(0.98); }
+        .btn-login:hover { background: #0e7490; }
+        .btn-login:active { transform: scale(0.99); }
         .btn-login:disabled {
-            background: #99f6e4;
+            background: #a5f3fc;
+            color: #0e7490;
             cursor: not-allowed;
         }
 
         .btn-login .spinner {
             display: inline-block;
-            width: 16px; height: 16px;
+            width: 14px; height: 14px;
             border: 2px solid rgba(255,255,255,0.3);
             border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
             vertical-align: middle;
-            margin-right: 8px;
+            margin-right: 6px;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -267,88 +214,117 @@
         .error-msg {
             display: none;
             background: #fef2f2;
-            color: #b91c1c;
+            color: #dc2626;
             border: 1px solid #fecaca;
             border-radius: 8px;
             padding: 10px 14px;
             font-size: 13px;
             margin-bottom: 16px;
-            text-align: center;
         }
 
         .error-msg.show { display: block; }
 
-        .footer-text {
-            margin-top: 28px;
+        .login-footer {
+            margin-top: 24px;
             text-align: center;
-            font-size: 12px;
+            font-size: 11px;
             color: #9ca3af;
+            line-height: 1.5;
         }
 
+        /* ── Bottom footer ── */
+        .site-footer {
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .site-footer a {
+            color: #64748b;
+            text-decoration: none;
+        }
+
+        .site-footer a:hover { text-decoration: underline; }
+
         /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .login-wrapper { flex-direction: column; width: 100%; min-height: auto; border-radius: 0; }
-            .brand-panel { padding: 32px 28px; }
-            .brand-panel h2 { font-size: 22px; }
-            .brand-features { display: none; }
-            .form-panel { padding: 32px 24px; }
+        @media (max-width: 480px) {
+            .login-card { padding: 28px 20px; }
+            .navbar .nav-links { display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="login-wrapper">
-    <!-- Branding -->
-    <div class="brand-panel">
-        <div class="brand-logo">
-            <div class="icon">
-                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-            </div>
-            <span>BreezeTech</span>
-        </div>
-        <h2>Smart climate,<br>perfect comfort.</h2>
-        <p>Control your HVAC systems, schedule maintenance, and optimize energy usage — all from one platform.</p>
-        <div class="brand-features">
-            <div class="feat"><div class="dot"></div>IoT-connected AC management</div>
-            <div class="feat"><div class="dot"></div>Real-time temperature monitoring</div>
-            <div class="feat"><div class="dot"></div>Predictive maintenance alerts</div>
-        </div>
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/" class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v6"/>
+            <path d="M12 22v-6"/>
+            <path d="M4.93 4.93l4.24 4.24"/>
+            <path d="M14.83 14.83l4.24 4.24"/>
+            <path d="M2 12h6"/>
+            <path d="M16 12h6"/>
+            <path d="M4.93 19.07l4.24-4.24"/>
+            <path d="M14.83 9.17l4.24-4.24"/>
+        </svg>
+        <span class="brand-name">BreezeTech</span>
+    </a>
+    <div class="nav-links">
+        <a href="#">Servicii</a>
+        <a href="#">Despre noi</a>
+        <a href="#">Contact</a>
     </div>
+</nav>
 
-    <!-- Login form -->
-    <div class="form-panel">
-        <h1>Welcome back</h1>
-        <p class="subtitle">Sign in to your BreezeTech account</p>
+<!-- Login -->
+<div class="main">
+    <div class="login-card">
+        <h1>Conectare cont</h1>
+        <p class="subtitle">Accesează panoul de control al echipamentelor HVAC</p>
 
         <div class="error-msg" id="errorMsg"></div>
 
         <form id="loginForm" autocomplete="on">
             <div class="field">
-                <label for="email">Email address</label>
-                <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="username">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="exemplu@email.com" required autocomplete="username">
             </div>
 
             <div class="field">
-                <label for="password">Password</label>
+                <label for="password">Parolă</label>
                 <div class="password-wrapper">
-                    <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
-                    <button type="button" class="toggle-pw" onclick="togglePassword()" aria-label="Toggle password visibility">
-                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <input type="password" id="password" name="password" placeholder="Introdu parola" required autocomplete="current-password">
+                    <button type="button" class="toggle-pw" onclick="togglePassword()" aria-label="Arată parola">
+                        <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     </button>
                 </div>
             </div>
 
             <div class="form-options">
-                <label><input type="checkbox" id="remember"> Remember me</label>
-                <a href="#">Forgot password?</a>
+                <label><input type="checkbox" id="remember"> Ține-mă minte</label>
+                <a href="#">Ai uitat parola?</a>
             </div>
 
-            <button type="submit" class="btn-login" id="loginBtn">Sign in</button>
+            <button type="submit" class="btn-login" id="loginBtn">Conectare</button>
         </form>
 
-        <p class="footer-text">Powered by BreezeTech IoT Platform &mdash; &copy; 2026</p>
+        <div class="login-footer">
+            Platformă de management aer condiționat<br>
+            BreezeTech SRL — Cluj-Napoca
+        </div>
     </div>
 </div>
+
+<!-- Footer -->
+<footer class="site-footer">
+    &copy; 2026 BreezeTech SRL. Toate drepturile rezervate. &nbsp;|&nbsp;
+    <a href="#">Termeni și condiții</a> &nbsp;|&nbsp;
+    <a href="#">Confidențialitate</a>
+</footer>
 
 <script>
     function togglePassword() {
@@ -364,7 +340,7 @@
 
         errEl.classList.remove('show');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner"></span> Signing in...';
+        btn.innerHTML = '<span class="spinner"></span> Se conectează...';
 
         const formData = new FormData();
         formData.append('email', document.getElementById('email').value);
@@ -375,18 +351,21 @@
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.detail || 'Login failed');
+                throw new Error(data.detail || 'Autentificare eșuată');
             }
 
+            // Store JWT
             localStorage.setItem('access_token', data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Redirect to dashboard
             window.location.href = '/dashboard';
 
         } catch (err) {
             errEl.textContent = err.message;
             errEl.classList.add('show');
             btn.disabled = false;
-            btn.textContent = 'Sign in';
+            btn.textContent = 'Conectare';
         }
     });
 </script>

@@ -1,184 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BreezeTech — Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>BreezeTech — Panou de control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #f0f4f8;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f5f7fa;
             min-height: 100vh;
+            color: #1a1a1a;
         }
 
-        /* ── Top bar ── */
-        .topbar {
+        /* ── Navbar ── */
+        .navbar {
             background: #fff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 0 32px;
-            height: 60px;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 24px;
+            height: 56px;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        .topbar .logo {
+        .navbar .brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 18px;
-            font-weight: 700;
-            color: #0d9488;
+            text-decoration: none;
         }
 
-        .topbar .logo svg { width: 28px; height: 28px; fill: #0d9488; }
+        .navbar .brand svg {
+            width: 28px;
+            height: 28px;
+            color: #0891b2;
+        }
 
-        .topbar .user-area {
+        .navbar .brand-name {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0e7490;
+            letter-spacing: -0.3px;
+        }
+
+        .navbar .right {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
         }
 
-        .topbar .user-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: #374151;
+        .navbar .user-info {
+            text-align: right;
         }
 
-        .topbar .user-role {
-            font-size: 11px;
+        .navbar .user-name {
+            font-size: 13px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 3px 8px;
-            border-radius: 4px;
-            background: #f0fdfa;
-            color: #0d9488;
+            color: #111827;
+        }
+
+        .navbar .user-role {
+            font-size: 11px;
+            color: #6b7280;
         }
 
         .btn-logout {
-            padding: 8px 16px;
-            background: #fee2e2;
-            color: #b91c1c;
-            border: none;
-            border-radius: 8px;
+            padding: 7px 14px;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
             font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s, color 0.15s;
         }
 
-        .btn-logout:hover { background: #fecaca; }
+        .btn-logout:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
 
         /* ── Content ── */
         .content {
-            max-width: 900px;
-            margin: 36px auto;
-            padding: 0 24px;
+            max-width: 860px;
+            margin: 28px auto;
+            padding: 0 20px;
         }
 
-        .welcome-card {
+        /* ── Welcome ── */
+        .welcome {
             background: #fff;
-            border-radius: 14px;
-            padding: 32px 36px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
-        }
-
-        .welcome-card h1 {
-            font-size: 24px;
-            color: #111827;
-            margin-bottom: 8px;
-        }
-
-        .welcome-card p {
-            color: #6b7280;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .session-info {
-            margin-top: 20px;
-            background: #f0fdfa;
-            border: 1px solid #99f6e4;
             border-radius: 10px;
-            padding: 16px 20px;
-            font-size: 13px;
-            color: #115e59;
-            text-align: left;
+            padding: 24px 28px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
         }
 
-        .session-info strong { font-weight: 600; }
+        .welcome h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 4px;
+        }
 
-        .session-info .token-preview {
-            margin-top: 8px;
-            font-family: 'Courier New', monospace;
+        .welcome p {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .session-box {
+            margin-top: 16px;
+            background: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .session-box .label {
             font-size: 11px;
+            font-weight: 600;
+            color: #0e7490;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
+        }
+
+        .session-box .token {
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
             color: #0f766e;
             word-break: break-all;
             background: rgba(0,0,0,0.03);
             padding: 8px;
-            border-radius: 6px;
+            border-radius: 4px;
+            line-height: 1.5;
         }
 
-        /* ── Stats grid ── */
-        .stats-grid {
+        /* ── Stats row ── */
+        .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
         }
 
-        .stat-card {
+        .stat {
             background: #fff;
-            border-radius: 12px;
-            padding: 22px 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-radius: 10px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
 
-        .stat-card .stat-label {
-            font-size: 12px;
+        .stat .stat-label {
+            font-size: 11px;
             font-weight: 600;
             color: #6b7280;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+            margin-bottom: 6px;
         }
 
-        .stat-card .stat-value {
-            font-size: 28px;
+        .stat .stat-value {
+            font-size: 26px;
             font-weight: 700;
-            color: #111827;
         }
 
-        .stat-card .stat-sub {
-            font-size: 12px;
+        .stat .stat-sub {
+            font-size: 11px;
             color: #9ca3af;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
-        .stat-card.teal .stat-value { color: #0d9488; }
-        .stat-card.amber .stat-value { color: #d97706; }
-        .stat-card.red .stat-value { color: #dc2626; }
-        .stat-card.blue .stat-value { color: #2563eb; }
+        .stat.c1 .stat-value { color: #0891b2; }
+        .stat.c2 .stat-value { color: #059669; }
+        .stat.c3 .stat-value { color: #d97706; }
+        .stat.c4 .stat-value { color: #7c3aed; }
 
-        /* ── Devices table ── */
-        .section-title {
-            font-size: 18px;
+        /* ── Section ── */
+        .section-header {
+            font-size: 15px;
             font-weight: 700;
             color: #111827;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
-        .table-card {
+        /* ── Table ── */
+        .table-wrap {
             background: #fff;
-            border-radius: 14px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            border-radius: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
             overflow: hidden;
+            margin-bottom: 20px;
         }
 
         table {
@@ -188,123 +206,173 @@
 
         table th {
             text-align: left;
-            padding: 14px 18px;
-            font-size: 12px;
+            padding: 12px 16px;
+            font-size: 11px;
             font-weight: 600;
             color: #6b7280;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: #f9fafb;
+            letter-spacing: 0.3px;
+            background: #fafafa;
             border-bottom: 1px solid #e5e7eb;
         }
 
         table td {
-            padding: 14px 18px;
-            font-size: 14px;
+            padding: 12px 16px;
+            font-size: 13px;
             color: #374151;
             border-bottom: 1px solid #f3f4f6;
         }
 
         table tr:last-child td { border-bottom: none; }
-        table tr:hover { background: #f9fafb; }
+        table tr:hover td { background: #fafafa; }
+
+        .device-name {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .device-serial {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 1px;
+        }
+
+        .temp {
+            font-weight: 500;
+        }
+
+        .temp-target {
+            font-size: 11px;
+            color: #9ca3af;
+        }
 
         .badge {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-size: 11px;
             font-weight: 600;
         }
 
-        .badge.online { background: #dcfce7; color: #166534; }
-        .badge.offline { background: #fee2e2; color: #991b1b; }
-        .badge.cooling { background: #dbeafe; color: #1e40af; }
-        .badge.heating { background: #ffedd5; color: #c2410c; }
-        .badge.auto { background: #f0fdfa; color: #115e59; }
-        .badge.fan { background: #f3f4f6; color: #4b5563; }
-        .badge.dry { background: #fef3c7; color: #92400e; }
+        .badge.online   { background: #dcfce7; color: #166534; }
+        .badge.offline   { background: #f3f4f6; color: #6b7280; }
+        .badge.cooling   { background: #e0f2fe; color: #0369a1; }
+        .badge.heating   { background: #fff7ed; color: #c2410c; }
+        .badge.auto      { background: #f0fdfa; color: #0e7490; }
+        .badge.fan       { background: #f3f4f6; color: #4b5563; }
+        .badge.dry       { background: #fefce8; color: #854d0e; }
 
-        .empty-state {
+        .empty-row {
             text-align: center;
-            padding: 40px;
+            padding: 32px;
             color: #9ca3af;
-            font-size: 14px;
+            font-size: 13px;
         }
 
+        /* ── Footer ── */
+        .site-footer {
+            padding: 16px 24px;
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+            margin-top: 20px;
+        }
+
+        /* ── Responsive ── */
         @media (max-width: 640px) {
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stats { grid-template-columns: 1fr 1fr; }
             table th, table td { padding: 10px 12px; font-size: 12px; }
+            .navbar .user-info { display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="topbar">
-    <div class="logo">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-        BreezeTech
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="/" class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v6"/>
+            <path d="M12 22v-6"/>
+            <path d="M4.93 4.93l4.24 4.24"/>
+            <path d="M14.83 14.83l4.24 4.24"/>
+            <path d="M2 12h6"/>
+            <path d="M16 12h6"/>
+            <path d="M4.93 19.07l4.24-4.24"/>
+            <path d="M14.83 9.17l4.24-4.24"/>
+        </svg>
+        <span class="brand-name">BreezeTech</span>
+    </a>
+    <div class="right">
+        <div class="user-info">
+            <div class="user-name" id="userName">—</div>
+            <div class="user-role" id="userRole">—</div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Deconectare</button>
     </div>
-    <div class="user-area">
-        <span class="user-role" id="userRole">—</span>
-        <span class="user-name" id="userName">—</span>
-        <button class="btn-logout" onclick="logout()">Sign out</button>
-    </div>
-</div>
+</nav>
 
 <div class="content">
     <!-- Welcome -->
-    <div class="welcome-card">
-        <h1 id="greeting">Welcome back</h1>
-        <p>You are securely logged in to the BreezeTech IoT Platform.</p>
-        <div class="session-info">
-            <strong>Session active</strong> — Authenticated via JWT token<br>
-            <div class="token-preview" id="tokenPreview">—</div>
+    <div class="welcome">
+        <h1 id="greeting">Bine ai revenit</h1>
+        <p>Ești conectat la platforma de management al echipamentelor HVAC.</p>
+        <div class="session-box">
+            <div class="label">Sesiune activă — JWT Token</div>
+            <div class="token" id="tokenPreview">—</div>
         </div>
     </div>
 
     <!-- Stats -->
-    <div class="stats-grid" id="statsGrid">
-        <div class="stat-card teal">
-            <div class="stat-label">Total Devices</div>
+    <div class="stats" id="statsGrid">
+        <div class="stat c1">
+            <div class="stat-label">Echipamente</div>
             <div class="stat-value" id="statDevices">—</div>
-            <div class="stat-sub">Registered AC units</div>
+            <div class="stat-sub">Unități AC înregistrate</div>
         </div>
-        <div class="stat-card blue">
+        <div class="stat c2">
             <div class="stat-label">Online</div>
             <div class="stat-value" id="statOnline">—</div>
-            <div class="stat-sub">Currently connected</div>
+            <div class="stat-sub">Conectate acum</div>
         </div>
-        <div class="stat-card amber">
-            <div class="stat-label">Open Tickets</div>
+        <div class="stat c3">
+            <div class="stat-label">Tichete</div>
             <div class="stat-value" id="statTickets">—</div>
-            <div class="stat-sub">Service requests</div>
+            <div class="stat-sub">Cereri de service</div>
         </div>
-        <div class="stat-card red">
-            <div class="stat-label">API Keys</div>
+        <div class="stat c4">
+            <div class="stat-label">Chei API</div>
             <div class="stat-value" id="statKeys">—</div>
-            <div class="stat-sub">Active integrations</div>
+            <div class="stat-sub">Integrări active</div>
         </div>
     </div>
 
-    <!-- Devices table placeholder -->
-    <h2 class="section-title">🌡 Your AC Devices</h2>
-    <div class="table-card">
+    <!-- Devices -->
+    <h2 class="section-header">Echipamente aer condiționat</h2>
+    <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>Device</th>
-                    <th>Location</th>
-                    <th>Temp</th>
-                    <th>Mode</th>
-                    <th>Status</th>
+                    <th>Echipament</th>
+                    <th>Locație</th>
+                    <th>Temperatură</th>
+                    <th>Mod</th>
+                    <th>Stare</th>
                 </tr>
             </thead>
             <tbody id="devicesBody">
-                <tr><td colspan="5" class="empty-state">Loading devices...</td></tr>
+                <tr><td colspan="5" class="empty-row">Se încarcă echipamentele...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- Footer -->
+<footer class="site-footer">
+    &copy; 2026 BreezeTech SRL — Cluj-Napoca. Toate drepturile rezervate.
+</footer>
 
 <script>
     const token = localStorage.getItem('access_token');
@@ -314,30 +382,38 @@
         window.location.href = '/';
     } else {
         document.getElementById('userName').textContent = user.full_name;
-        document.getElementById('userRole').textContent = user.role;
-        document.getElementById('greeting').textContent = 'Welcome, ' + user.full_name.split(' ')[0];
+        document.getElementById('userRole').textContent = user.role === 'admin' ? 'Administrator' : user.role === 'technician' ? 'Tehnician' : 'Client';
+        document.getElementById('greeting').textContent = 'Bine ai revenit, ' + user.full_name.split(' ')[0];
         document.getElementById('tokenPreview').textContent = token;
 
-        // Demo stats (static for mockup)
+        // Demo stats
         document.getElementById('statDevices').textContent = '3';
         document.getElementById('statOnline').textContent = '2';
         document.getElementById('statTickets').textContent = '1';
         document.getElementById('statKeys').textContent = '1';
 
-        // Demo devices table
+        // Demo devices
         const devices = [
-            { name: 'Daikin FTXM25R', serial: 'BT-DA-2024001', location: 'Living Room', target: 22.0, current: 22.3, mode: 'cooling', online: true },
-            { name: 'Samsung AR12TX', serial: 'BT-SA-2024002', location: 'Bedroom', target: 20.5, current: 21.1, mode: 'auto', online: true },
-            { name: 'LG S18ET', serial: 'BT-LG-2024003', location: 'Office', target: 23.0, current: 25.8, mode: 'heating', online: false },
+            { name: 'Daikin FTXM25R', serial: 'BT-DA-2024001', location: 'Living', target: 22.0, current: 22.3, mode: 'cooling', online: true },
+            { name: 'Samsung AR12TXHQ', serial: 'BT-SA-2024002', location: 'Dormitor', target: 20.5, current: 21.1, mode: 'auto', online: true },
+            { name: 'LG S18ET', serial: 'BT-LG-2024003', location: 'Birou', target: 23.0, current: 25.8, mode: 'heating', online: false },
         ];
+
+        const modeLabels = { cooling: 'Răcire', heating: 'Încălzire', auto: 'Auto', fan: 'Ventilare', dry: 'Uscare' };
 
         const tbody = document.getElementById('devicesBody');
         tbody.innerHTML = devices.map(d => `
             <tr>
-                <td><strong>${d.name}</strong><br><span style="font-size:11px;color:#9ca3af">${d.serial}</span></td>
+                <td>
+                    <div class="device-name">${d.name}</div>
+                    <div class="device-serial">${d.serial}</div>
+                </td>
                 <td>${d.location}</td>
-                <td>${d.current}°C → ${d.target}°C</td>
-                <td><span class="badge ${d.mode}">${d.mode}</span></td>
+                <td>
+                    <span class="temp">${d.current}°C</span>
+                    <span class="temp-target">→ ${d.target}°C</span>
+                </td>
+                <td><span class="badge ${d.mode}">${modeLabels[d.mode] || d.mode}</span></td>
                 <td><span class="badge ${d.online ? 'online' : 'offline'}">${d.online ? 'Online' : 'Offline'}</span></td>
             </tr>
         `).join('');
