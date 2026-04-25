@@ -5,7 +5,7 @@ to discover contact information (emails, phone numbers) for phishing campaign ta
 
 Enhanced with:
   - Deep Google search for companies and individual targets
-  - AI-powered target enrichment via OpenAI API
+  - AI-powered target enrichment via Google Gemini API
 """
 
 import os
@@ -517,18 +517,19 @@ class OsintScanner:
     # ─── AI-Powered Search & Enrichment ──────────────────────
 
     def scan_ai_search(self):
-        """Use OpenAI to generate targeted search queries and enrich discovered contacts."""
-        api_key = os.getenv("OPENAI_API_KEY", "").strip()
+        """Use Gemini to generate targeted search queries and enrich discovered contacts."""
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
         if not api_key:
-            self._log("🤖 AI search skipped — OPENAI_API_KEY not configured")
+            self._log("🤖 AI search skipped — GEMINI_API_KEY not configured")
             return
 
         try:
-            from openai import OpenAI  # lazy import
-            client = OpenAI(api_key=api_key)
-            model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+            import google.generativeai as genai  # lazy import
+            genai.configure(api_key=api_key)
+            model = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+            client = genai.GenerativeModel(model)
         except ImportError:
-            self._log("🤖 AI search skipped — openai package not installed")
+            self._log("🤖 AI search skipped — google-generativeai package not installed")
             return
         except Exception as e:
             self._log(f"🤖 AI client init error: {str(e)[:80]}")
@@ -554,14 +555,10 @@ class OsintScanner:
                 f"Emails found so far: {len(self.found_emails)}\n"
                 f"Example output: [\"query1\", \"query2\", ...]"
             )
-            response = client.chat.completions.create(
-                model=model,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=300,
-                temperature=0.3,
-            )
-            raw = response.choices[0].message.content.strip()
-            # Parse the JSON array
+            response = client.generate_content(prompt)
+            raw = response.text.strip()
+            # Parse the JSON array (strip markdown fences if present)
+            raw = re.sub(r"^```[a-z]*\n?", "", raw).rstrip("`").strip()
             queries = json.loads(raw) if raw.startswith("[") else []
             if isinstance(queries, list):
                 self._log(f"  🤖 AI suggested {len(queries)} extra queries")
@@ -616,13 +613,8 @@ class OsintScanner:
                     f"Department: {dept}\n\n"
                     f"Reply with ONLY the summary text, no JSON."
                 )
-                resp = client.chat.completions.create(
-                    model=model,
-                    messages=[{"role": "user", "content": prompt}],
-                    max_tokens=120,
-                    temperature=0.4,
-                )
-                summary = resp.choices[0].message.content.strip()
+                resp = client.generate_content(prompt)
+                summary = resp.text.strip()
                 r["ai_summary"] = summary
             except Exception as e:
                 self._log(f"    AI enrichment error for {email}: {str(e)[:60]}")
