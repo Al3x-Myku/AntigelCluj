@@ -52,8 +52,19 @@ async def get_anomalies(
 # ─── Train/Retrain Model ─────────────────────────────────────
 @router.post("/train")
 async def train_model(db: Session = Depends(get_db)):
-    """Train the MCD anomaly detector on historical login data."""
-    events = db.query(LoginEvent).filter(LoginEvent.is_anomalous == False).all()
+    """Train the MCD anomaly detector on historical login data.
+    
+    Selects training events by their *feature values* (not the is_anomalous flag)
+    to avoid the chicken-and-egg problem where a bad model marks normal events anomalous.
+    """
+    # Select events with normal-looking features regardless of how they were scored
+    events = db.query(LoginEvent).filter(
+        LoginEvent.ip_is_new == 0.0,
+        LoginEvent.device_is_new == 0.0,
+        LoginEvent.geo_distance_km < 100.0,
+        LoginEvent.login_failures_last_hour < 3.0,
+        LoginEvent.success == True,
+    ).all()
     if len(events) < 10:
         raise HTTPException(status_code=400, detail=f"Need at least 10 normal events, have {len(events)}")
 
@@ -117,6 +128,7 @@ async def simulate_login(
     if is_attack:
         # Suspicious login - make it very unusual so Mahalanobis catches it clearly
         attacker_ips = ["45.33.32.156", "185.220.101.1", "91.219.237.42"]
+        city, country = random.choice([("Moscow", "Russia"), ("Beijing", "China"), ("Lagos", "Nigeria"), ("Karachi", "Pakistan")])
         evt = LoginEvent(
             account_id=account.id,
             username=account.username,
@@ -132,8 +144,8 @@ async def simulate_login(
             time_since_last_login_hrs=round(random.uniform(0.01, 0.3), 4),
             typing_speed_ms=round(random.uniform(10, 25), 2),
             device_fingerprint=f"attacker-{random.randint(1000, 9999)}",
-            country=random.choice(["Russia", "China", "Nigeria"]),
-            city=random.choice(["Moscow", "Beijing", "Lagos"]),
+            country=country,
+            city=city,
         )
     else:
         # Normal login - tightly aligned with our synthetic generator (9 AM or 1:30 PM, clean metrics)

@@ -393,6 +393,97 @@ class OsintScanner:
                 self._log(f"  ✓ Social page: {urlparse(url).netloc}")
                 self._process_page(html, url)
 
+    def scan_social_media_deep(self, platforms=None):
+        """Deep social media search — targeted dorks across LinkedIn, Facebook, GitHub, Instagram.
+
+        Args:
+            platforms: list of platforms to search (default: all)
+                       Options: 'linkedin', 'facebook', 'github', 'instagram', 'twitter'
+        """
+        if platforms is None:
+            platforms = ["linkedin", "facebook", "github", "instagram", "twitter"]
+
+        self._log(f"🔎 Deep social media search across: {', '.join(platforms)}")
+        company = self.company_name
+        domain = self.domain
+        slug = domain.split(".")[0]
+
+        dork_map = {
+            "linkedin": [
+                f'site:linkedin.com/in "{company}" email',
+                f'site:linkedin.com/in "@{domain}"',
+                f'site:linkedin.com/company/{slug}',
+                f'site:linkedin.com "{company}" employees OR team OR staff',
+            ],
+            "facebook": [
+                f'site:facebook.com "{company}" employees OR team',
+                f'site:facebook.com/{slug} about OR contact',
+                f'site:facebook.com "{company}" "@{domain}"',
+            ],
+            "github": [
+                f'site:github.com "@{domain}"',
+                f'site:github.com "{company}" email OR contact',
+                f'"{domain}" site:github.com commit author',
+                f'site:github.com/{slug}',
+            ],
+            "instagram": [
+                f'site:instagram.com "{company}"',
+                f'site:instagram.com/{slug}',
+                f'"{company}" instagram email contact',
+            ],
+            "twitter": [
+                f'site:twitter.com "{company}" contact OR email',
+                f'site:twitter.com/{slug}',
+                f'"{company}" twitter "@{domain}"',
+            ],
+        }
+
+        for platform in platforms:
+            dorks = dork_map.get(platform, [])
+            if not dorks:
+                continue
+            self._log(f"  📱 Searching {platform.title()}...")
+            for dork in dorks:
+                self._delay()
+                try:
+                    url = f"https://www.google.com/search?q={requests.utils.quote(dork)}&num=15"
+                    html = self._fetch(url, timeout=10)
+                    if html:
+                        soup = BeautifulSoup(html, "lxml")
+                        text = soup.get_text(" ", strip=True)
+                        emails = self._extract_emails(text, url)
+                        phones = self._extract_phones(text)
+                        if emails:
+                            self._log(f"    ✓ {platform.title()}: {len(emails)} email(s)")
+                            for em in emails:
+                                self.results.append(self._build_result(
+                                    email=em,
+                                    source_url=f"Social Media — {platform.title()}",
+                                    context_text=text[:500],
+                                ))
+                        if phones:
+                            self._log(f"    ✓ {platform.title()}: {len(phones)} phone(s)")
+                            for ph in phones:
+                                if not any(r.get("phone") == ph for r in self.results):
+                                    self.results.append(self._build_result(
+                                        phone=ph,
+                                        source_url=f"Social Media — {platform.title()}",
+                                        context_text=text[:500],
+                                    ))
+                        # Follow links back to target domain
+                        for a in soup.find_all("a", href=True):
+                            href = a["href"]
+                            if self.domain in href and href.startswith("http"):
+                                parsed = urlparse(href)
+                                clean = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+                                if clean not in self._visited_urls:
+                                    page_html = self._fetch(clean, timeout=8)
+                                    if page_html:
+                                        self._process_page(page_html, clean)
+                                        self._delay()
+                except Exception as e:
+                    self._log(f"    ✗ {platform.title()} dork error: {str(e)[:60]}")
+
     # ─── Deep Google Search (Company) ────────────────────────
 
     def scan_google_deep_company(self):
@@ -660,6 +751,7 @@ class OsintScanner:
             self.scan_public_directories()
             self.scan_email_patterns()
             self.scan_social_media()
+            self.scan_social_media_deep()
             # ── Enhanced: deeper searches ──────────────────────
             self.scan_google_deep_company()
             self.scan_google_deep_individuals()
@@ -761,6 +853,122 @@ def start_osint_scan(domain: str, company_name: str = "",
         thread = threading.Thread(
             target=run_osint_scan_background,
             args=(scan_id, domain, company_name or domain.split(".")[0].title()),
+            kwargs={"enable_ai": enable_ai},
+            daemon=True,
+        )
+        thread.start()
+        return scan_id
+    finally:
+        db.close()
+
+
+def run_osint_scan_media_background(scan_id: str, domain: str, company_name: str,
+                                     platforms: list, enable_ai: bool = False):
+    """Run social-media-focused OSINT scan in background thread."""
+    import warnings
+    warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+
+    db = SessionLocal()
+    try:
+        scanner = OsintScanner(domain=domain, company_name=company_name, scan_id=scan_id,
+                                enable_ai=enable_ai)
+
+        start = time.time()
+        scanner._log(f"═══ MEDIA SEARCH STARTED: {company_name} ({domain}) ═══")
+        scanner._log(f"Platforms: {', '.join(platforms)}")
+
+        try:
+            # Run targeted social media searches
+            scanner.scan_social_media()
+            scanner.scan_social_media_deep(platforms=platforms)
+            scanner.scan_email_patterns()
+            # Optionally run deep individual search on discovered names
+            scanner.scan_google_deep_individuals()
+            if enable_ai:
+                scanner.scan_ai_search()
+        except Exception as e:
+            scanner._log(f"✗ Media scan error: {str(e)}")
+
+        duration = time.time() - start
+        scanner._log(f"═══ MEDIA SEARCH COMPLETE in {duration:.1f}s — "
+                       f"{len(scanner.found_emails)} emails, {len(scanner.found_phones)} phones ═══")
+
+        result = {
+            "scan_id": scan_id,
+            "domain": domain,
+            "company_name": company_name,
+            "total_emails": len(scanner.found_emails),
+            "total_phones": len(scanner.found_phones),
+            "total_contacts": len(scanner.results),
+            "duration_seconds": duration,
+            "results": scanner.results,
+            "log": "\n".join(scanner.log_lines),
+        }
+
+        # Save results
+        scan = db.query(OsintScan).filter(OsintScan.scan_id == scan_id).first()
+        if scan:
+            scan.status = "completed"
+            scan.total_emails = result["total_emails"]
+            scan.total_phones = result["total_phones"]
+            scan.total_contacts = result["total_contacts"]
+            scan.duration_seconds = result["duration_seconds"]
+            scan.completed_at = datetime.utcnow()
+            scan.log = result["log"]
+
+            for r in result["results"]:
+                osint_result = OsintResult(
+                    scan_id=scan_id,
+                    email=r.get("email", ""),
+                    phone=r.get("phone", ""),
+                    first_name=r.get("first_name", ""),
+                    last_name=r.get("last_name", ""),
+                    company=r.get("company", ""),
+                    domain=r.get("domain", ""),
+                    department=r.get("department", ""),
+                    role=r.get("role", ""),
+                    source_url=r.get("source_url", ""),
+                    confidence=r.get("confidence", 0.5),
+                    risk_score=r.get("risk_score", 0.5),
+                    ai_summary=r.get("ai_summary", ""),
+                )
+                db.add(osint_result)
+            db.commit()
+            logger.info(f"Media scan {scan_id} saved: {result['total_contacts']} contacts")
+
+    except Exception as e:
+        logger.error(f"Media scan {scan_id} failed: {e}")
+        scan = db.query(OsintScan).filter(OsintScan.scan_id == scan_id).first()
+        if scan:
+            scan.status = "failed"
+            scan.log = (scan.log or "") + f"\n[ERROR] {str(e)}"
+            scan.completed_at = datetime.utcnow()
+            db.commit()
+    finally:
+        db.close()
+
+
+def start_osint_scan_media(domain: str, company_name: str = "",
+                           platforms: list = None, enable_ai: bool = False) -> str:
+    """Start a social-media-focused OSINT scan. Returns scan_id."""
+    if platforms is None:
+        platforms = ["linkedin", "facebook", "github", "instagram", "twitter"]
+
+    db = SessionLocal()
+    try:
+        scan = OsintScan(
+            domain=domain,
+            company_name=company_name or domain.split(".")[0].title(),
+            status="running",
+        )
+        db.add(scan)
+        db.commit()
+        db.refresh(scan)
+        scan_id = scan.scan_id
+
+        thread = threading.Thread(
+            target=run_osint_scan_media_background,
+            args=(scan_id, domain, company_name or domain.split(".")[0].title(), platforms),
             kwargs={"enable_ai": enable_ai},
             daemon=True,
         )
