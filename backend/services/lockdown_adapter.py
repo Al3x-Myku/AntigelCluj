@@ -115,6 +115,33 @@ class SQLiteAdapter(LockdownAdapter):
             return False
         account.is_active = True
         account.is_locked = False
+
+        from backend.models.account import Card, ApiToken, Session as SessionModel
+
+        # Unfreeze all cards
+        frozen_cards = self.db.query(Card).filter(
+            Card.account_id == int(account_id), Card.status == "frozen"
+        ).all()
+        for c in frozen_cards:
+            c.status = "active"
+            c.frozen_at = None
+
+        # Re-activate revoked API tokens
+        revoked_tokens = self.db.query(ApiToken).filter(
+            ApiToken.account_id == int(account_id), ApiToken.status == "revoked"
+        ).all()
+        for t in revoked_tokens:
+            t.status = "active"
+            t.revoked_at = None
+
+        # Restore revoked sessions
+        revoked_sessions = self.db.query(SessionModel).filter(
+            SessionModel.account_id == int(account_id), SessionModel.status == "revoked"
+        ).all()
+        for s in revoked_sessions:
+            s.status = "active"
+            s.revoked_at = None
+
         self.db.commit()
         return True
 
