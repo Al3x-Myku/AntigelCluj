@@ -1,6 +1,10 @@
 """Defense router — Login monitoring, anomaly detection, bans, and lockdown."""
+# noinspection PyBroadException
 
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -13,6 +17,7 @@ from backend.models.login_event import LoginEvent
 from backend.models.account import Account, AuditLog
 from backend.services import anomaly_detector, rate_limiter
 from backend.services.lockdown import execute_lockdown, get_lockdown_status, restore_account
+from backend.services.external_lockdown import lockdown_external_sites, restore_external_sites, get_external_status
 
 router = APIRouter()
 
@@ -192,16 +197,29 @@ async def simulate_login(
         result["ban_triggered"] = ban_info
 
     # Auto-lockdown account if anomalous
-    if is_anom:
-        # 0.2 represents a reasonable high-confidence margin
-        threshold = anomaly_detector.get_threshold() + 0.2
-        if score > threshold:
-            if AUTO_LOCKDOWN_ENABLED:
+    logger.info(f"Simulate-login result: is_anom={is_anom}, score={score}, auto_lockdown={AUTO_LOCKDOWN_ENABLED}")
+    if is_anom and AUTO_LOCKDOWN_ENABLED:
+        threshold = anomaly_detector.get_threshold()
+        if score >= threshold:
+            try:
                 execute_lockdown(db, account.id, triggered_by="auto-response")
                 result["auto_lockdown_triggered"] = True
-                result["auto_lockdown_warning"] = f"Account locked. Score {score} exceeds Auto-response threshold {threshold}. IP banned."
-            else:
-                result["auto_lockdown_warning"] = f"Anomaly score {score}. IP banned. Enable Auto-lockdown to lock account as well."
+                result["auto_lockdown_warning"] = f"Account locked. Score {score} exceeds threshold {threshold}. IP banned."
+                # ─── CASCADE: Lock down on external mockup sites ───
+                try:
+                    ext_results = lockdown_external_sites(account.email)
+                    result["external_lockdowns"] = ext_results
+                except Exception as e:
+                    logger.error(f"External lockdown cascade failed: {e}")
+                    result["external_lockdown_error"] = str(e)
+            except Exception as e:
+                logger.error(f"Internal lockdown failed: {e}")
+                result["auto_lockdown_triggered"] = False
+                result["auto_lockdown_error"] = str(e)
+        else:
+            result["auto_lockdown_warning"] = f"Anomaly score {score} below threshold {threshold}. IP banned but account not locked."
+    elif is_anom:
+        result["auto_lockdown_warning"] = f"Anomaly score {score}. IP banned. Enable Auto-lockdown to lock account as well."
 
     return result
 
@@ -209,9 +227,17 @@ async def simulate_login(
 # ─── Lockdown ─────────────────────────────────────────────────
 @router.post("/lockdown/{account_id}")
 async def lockdown_account(account_id: int, db: Session = Depends(get_db)):
-    """Execute full lockdown on an account."""
+    """Execute full lockdown on an account — cascades to external systems."""
     try:
         result = execute_lockdown(db, account_id, triggered_by="operator")
+        # Cascade to external sites
+        account = db.query(Account).filter(Account.id == account_id).first()
+        if account:
+            try:
+                ext_results = lockdown_external_sites(account.email)
+                result["external_lockdowns"] = ext_results
+            except Exception as e:
+                result["external_lockdown_error"] = str(e)
         return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -228,11 +254,27 @@ async def lockdown_status(account_id: int, db: Session = Depends(get_db)):
 
 @router.post("/lockdown/{account_id}/restore")
 async def restore(account_id: int, db: Session = Depends(get_db)):
-    """Restore a locked-down account."""
+    """Restore a locked-down account — cascades restore to external systems."""
     try:
-        return restore_account(db, account_id, triggered_by="operator")
+        result = restore_account(db, account_id, triggered_by="operator")
+        # Cascade restore to external sites
+        account = db.query(Account).filter(Account.id == account_id).first()
+        if account:
+            try:
+                ext_results = restore_external_sites(account.email)
+                result["external_restores"] = ext_results
+            except Exception:
+                pass
+        return result
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ─── External Systems Status ─────────────────────────────────
+@router.get("/external-status")
+async def external_systems_status():
+    """Get health/status of all registered external lockdown targets."""
+    return {"systems": get_external_status()}
 
 
 # ─── Bans ─────────────────────────────────────────────────────

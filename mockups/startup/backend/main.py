@@ -1,4 +1,4 @@
-"""Banking App — FastAPI entrypoint (MongoDB)."""
+"""BreezeTech Startup — FastAPI entrypoint (MySQL/MariaDB)."""
 
 import os
 from pathlib import Path
@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, FileResponse
 
 from backend.database import init_db
 
-app = FastAPI(title="SecurBank", version="1.0.0")
+app = FastAPI(title="BreezeTech", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,18 +39,22 @@ def on_startup():
     """Init DB and seed demo data."""
     try:
         init_db()
-        print("[OK] MongoDB ready, indexes created")
+        print("[OK] MySQL ready, tables created")
     except Exception as e:
         print(f"[WARN] DB init failed: {e}")
         return
 
-    from backend.database import users_col
+    from backend.database import SessionLocal
+    from backend.models.user import User
+    db = SessionLocal()
     try:
-        if users_col.count_documents({}) == 0:
+        if db.query(User).count() == 0:
             from backend.seed import run_seed
             run_seed()
     except Exception as e:
         print(f"[WARN] Seed failed: {e}")
+    finally:
+        db.close()
 
 
 # Pages
@@ -74,6 +78,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "backend.main:app",
         host=os.getenv("SERVER_HOST", "0.0.0.0"),
-        port=int(os.getenv("SERVER_PORT", "9000")),
+        port=int(os.getenv("SERVER_PORT", "9001")),
         reload=True,
     )

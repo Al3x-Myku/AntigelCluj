@@ -1,13 +1,14 @@
-"""Auth router — login and JWT token management (MongoDB)."""
+"""Auth router — login and JWT token management (MySQL/MariaDB)."""
 
 import os
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Form
+from fastapi import APIRouter, HTTPException, Form, Depends
 from passlib.context import CryptContext
 from jose import jwt, JWTError
-from bson import ObjectId
+from sqlalchemy.orm import Session
 
-from backend.database import users_col
+from backend.database import get_db
+from backend.models.user import User
 
 router = APIRouter()
 pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,10 +18,10 @@ JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY = int(os.getenv("JWT_EXPIRY_MINUTES", "60"))
 
 
-def create_token(user_id: str, email: str) -> str:
+def create_token(user_id: int, email: str) -> str:
     """Create a JWT access token."""
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "email": email,
         "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRY),
         "iat": datetime.utcnow(),
@@ -29,7 +30,7 @@ def create_token(user_id: str, email: str) -> str:
 
 
 def verify_token(token: str) -> dict:
-    """Decode and verify a JWT token. Returns the payload or raises."""
+    """Decode and verify a JWT token."""
     try:
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
     except JWTError:
@@ -40,37 +41,44 @@ def verify_token(token: str) -> dict:
 def login(
     email: str = Form(...),
     password: str = Form(...),
+    db: Session = Depends(get_db),
 ):
     """Authenticate user and return JWT."""
-    user = users_col.find_one({"email": email})
-    if not user or not pwd_ctx.verify(password, user["password_hash"]):
+    try:
+        user = db.query(User).filter(User.email == email).first()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+
+    if not user or not pwd_ctx.verify(password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    if not user.get("is_active", True):
+    if not user.is_active:
         raise HTTPException(status_code=403, detail="Account disabled — security lockdown in effect")
-    if user.get("is_locked", False):
+    if user.is_locked:
         raise HTTPException(status_code=403, detail="Account locked — contact support")
 
-    token = create_token(str(user["_id"]), user["email"])
+    token = create_token(user.id, user.email)
     return {
         "access_token": token,
         "token_type": "bearer",
         "user": {
-            "id": str(user["_id"]),
-            "email": user["email"],
-            "full_name": user["full_name"],
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "role": user.role,
         },
     }
 
 
 @router.get("/me")
-def get_me(token: str):
+def get_me(token: str, db: Session = Depends(get_db)):
     """Return current user from JWT token."""
     payload = verify_token(token)
-    user = users_col.find_one({"_id": ObjectId(payload["sub"])})
+    user = db.query(User).filter(User.id == int(payload["sub"])).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {
-        "id": str(user["_id"]),
-        "email": user["email"],
-        "full_name": user["full_name"],
+        "id": user.id,
+        "email": user.email,
+        "full_name": user.full_name,
+        "role": user.role,
     }
