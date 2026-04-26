@@ -25,6 +25,18 @@ import time
 import sys
 import json
 import argparse
+import os
+
+# ─── Fix Windows console encoding ────────────────────────────
+# Windows defaults to cp1252 which can't print emoji/Unicode.
+# Force UTF-8 for stdout/stderr so the demo doesn't crash.
+if sys.platform == "win32":
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass  # Older Python or non-TTY
 
 # ─── Configuration ────────────────────────────────────────────
 PHISHGUARD_URL = "http://localhost:8000"
